@@ -25,6 +25,7 @@ struct FolderContext {
 
 #[get("/folders/<folder_id>")]
 pub fn show(auth: Auth, state: State, folder_id: i32) -> impl Responder<'static> {
+    let file_controller = resolve!(FileController);
     let user = auth.to_owned().user();
 
     let folder = match <resolve!(FolderController)>::show(user.clone(), folder_id) {
@@ -53,7 +54,7 @@ pub fn show(auth: Auth, state: State, folder_id: i32) -> impl Responder<'static>
         }
     };
 
-    let files = match <resolve!(FileController)>::index(user.clone(), folder.id()) {
+    let files = match file_controller.index(user.clone(), folder.id()) {
         Ok(files) => files,
         Err(e) => {
             log!(

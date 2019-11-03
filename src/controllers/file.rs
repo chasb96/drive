@@ -10,10 +10,16 @@ use schema::*;
 use std::fs;
 use crate::services::FileService;
 
-pub struct FileController;
+pub struct FileController<T: FileService> {
+    file_service: T
+}
 
-impl FileController {
-    pub fn index(user: User, folder_id: i32) -> Result<Vec<File>, Error> {
+impl<T: FileService> FileController<T> {
+    pub fn new(file_service: T) -> Self {
+        Self { file_service }
+    }
+
+    pub fn index(&self, user: User, folder_id: i32) -> Result<Vec<File>, Error> {
         if !user.can_index::<File>() {
             log!(
                 "info",
@@ -23,11 +29,7 @@ impl FileController {
             return Err(Error::Forbidden);
         }
 
-        let conn = &DbFacade::connection();
-
-        match File::all()
-            .filter(files::folder_id.eq(folder_id))
-            .load(conn)
+        match self.file_service.all(folder_id)
         {
             Ok(folders) => Ok(folders),
             Err(e) => {
@@ -37,7 +39,7 @@ impl FileController {
         }
     }
 
-    pub fn show(user: User, file_id: i32) -> Result<File, Error> {
+    pub fn show(&self, user: User, file_id: i32) -> Result<File, Error> {
         let conn = &DbFacade::connection();
 
         let found: File = match File::all().filter(files::id.eq(&file_id)).first(conn) {
@@ -62,7 +64,7 @@ impl FileController {
         }
     }
 
-    pub fn create(user: User) -> Result<(), Error> {
+    pub fn create(&self, user: User) -> Result<(), Error> {
         match user.can_create::<File>() {
             true => Ok(()),
             false => {
@@ -77,6 +79,7 @@ impl FileController {
     }
 
     pub fn store(
+        &self,
         user: User,
         name: String,
         extension: String,
@@ -85,13 +88,14 @@ impl FileController {
         public: bool,
         input: fs::File,
     ) -> Result<File, Error> {
+        let file_service = resolve!(FileService);
         if !user.can_create::<File>() {
             return Err(Error::Forbidden);
         }
 
         let file_name = <resolve!(StorageService)>::store(user_id.to_string(), input).unwrap();
 
-        match <resolve!(FileService)>::create(name, extension, file_name, folder_id, public) {
+        match file_service.create(name, extension, file_name, folder_id, public) {
             Ok(file) => Ok(file),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
@@ -100,7 +104,7 @@ impl FileController {
         }
     }
 
-    pub fn edit(user: User, file_id: i32) -> Result<File, Error> {
+    pub fn edit(&self, user: User, file_id: i32) -> Result<File, Error> {
         let conn = &DbFacade::connection();
 
         let found: File = match File::all().filter(files::id.eq(&file_id)).first(conn) {
@@ -119,6 +123,7 @@ impl FileController {
     }
 
     pub fn update(
+        &self,
         user: User,
         file_id: i32,
         name: String,
@@ -126,6 +131,7 @@ impl FileController {
         public: bool,
         folder_id: i32,
     ) -> Result<File, Error> {
+        let file_service = resolve!(FileService);
         let conn = &DbFacade::connection();
 
         let found: File = match File::all().filter(files::id.eq(&file_id)).first(conn) {
@@ -141,7 +147,7 @@ impl FileController {
             return Err(Error::Forbidden);
         }
 
-        match <resolve!(FileService)>::update(
+        match file_service.update(
             file_id,
             name,
             found.file_name().to_string(),
@@ -157,7 +163,8 @@ impl FileController {
         }
     }
 
-    pub fn delete(user: User, file_id: i32) -> Result<File, Error> {
+    pub fn delete(&self, user: User, file_id: i32) -> Result<File, Error> {
+        let file_service = resolve!(FileService);
         let conn = &DbFacade::connection();
 
         let found: File = match File::all().filter(files::id.eq(&file_id)).first(conn) {
@@ -183,7 +190,7 @@ impl FileController {
             return Err(Error::InternalServerError);
         }
 
-        match <resolve!(FileService)>::delete(file_id) {
+        match file_service.delete(file_id) {
             Ok(file) => Ok(file),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
@@ -192,7 +199,7 @@ impl FileController {
         }
     }
 
-    pub fn contents(user: User, file_id: i32) -> Result<fs::File, Error> {
+    pub fn contents(&self, user: User, file_id: i32) -> Result<fs::File, Error> {
         let conn = &DbFacade::connection();
 
         let found: File = match File::all().filter(files::id.eq(&file_id)).first(conn) {
@@ -228,32 +235,31 @@ impl FileController {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use db::builders::*;
-    use db::query::Query;
     use std::error::Error;
+    use super::FileController;
 
     #[test]
     fn test_index() -> Result<(), Box<dyn Error>> {
-        dotenv::dotenv().expect("Missing .env file");
-
-        let user = factory!(User).save()?;
-        let folder = factory!(Folder, user.id(), None).save()?;
-        let mut expected = vec![
-            factory!(File, folder.id()).save()?,
-            factory!(File, folder.id()).save()?,
-            factory!(File, folder.id()).save()?,
-            factory!(File, folder.id()).save()?,
-            factory!(File, folder.id()).save()?,
-            factory!(File, folder.id()).save()?,
+        let user = factory!(User);
+        let folder = factory!(Folder, user.id(), None);
+        let expected = vec![
+            factory!(File, folder.id()),
+            factory!(File, folder.id()),
+            factory!(File, folder.id()),
+            factory!(File, folder.id()),
+            factory!(File, folder.id()),
+            factory!(File, folder.id()),
         ];
 
-        let mut actual = <resolve!(FileController)>::index(user, folder.id())?;
+        let mut file_service = resolve!(FileService);
+        file_service
+            .expect_all(| folder_id | folder_id.partial_eq(folder.id()))
+            .returns(Ok(expected.clone()));
 
-        // Sorting the lists, Vec will return != if they are in
-        //  different order, but this shouldn't care
-        expected.sort_by(|l, r| l.id().cmp(&r.id()));
-        actual.sort_by(|l, r| l.id().cmp(&r.id()));
+        let file_controller = FileController::new(file_service);
+
+        let actual = file_controller.index(user, folder.id())?;
 
         assert_eq!(expected, actual);
 

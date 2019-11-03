@@ -18,6 +18,7 @@ struct HomeContext {
 
 #[get("/")]
 pub fn home(auth: Auth, state: State) -> impl Responder<'static> {
+    let file_controller = resolve!(FileController);
     let user = auth.to_owned().user();
 
     let folder = match <resolve!(FolderController)>::index(user.clone(), None) {
@@ -49,7 +50,7 @@ pub fn home(auth: Auth, state: State) -> impl Responder<'static> {
         }
     };
 
-    let files = match <resolve!(FileController)>::index(user.clone(), folder.id()) {
+    let files = match file_controller.index(user.clone(), folder.id()) {
         Ok(files) => files,
         Err(e) => {
             log!(

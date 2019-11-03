@@ -13,26 +13,3 @@ impl File {
             .first::<Folder>(&DbFacade::connection())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use db::builders::*;
-    use db::query::Query;
-    use std::error::Error;
-
-    #[test]
-    fn test_folder() -> Result<(), Box<dyn Error>> {
-        dotenv::dotenv().expect("Missing .env file");
-
-        let user = factory!(User).save()?;
-        let folder = factory!(Folder, user.id(), None).save()?;
-        let file = factory!(File, folder.id()).save()?;
-
-        let expected = folder;
-        let actual = file.folder()?;
-
-        assert_eq!(expected, actual);
-
-        Ok(())
-    }
-}

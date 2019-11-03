@@ -13,9 +13,6 @@ pub struct StorageService;
 
 impl StorageService {
     pub fn store(directory: String, input: File) -> Result<String, StorageServiceError> {
-        #[cfg(test)]
-        let directory = String::from("test");
-
         let timestamp = Utc::now().to_string();
         let random_bytes: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
@@ -45,9 +42,6 @@ impl StorageService {
     }
 
     pub fn read(directory: String, file_name: String) -> Result<File, StorageServiceError> {
-        #[cfg(test)]
-        let directory = String::from("test");
-
         let path = format!(
             "{}/{directory}/{file_name}",
             Env::storage_dir(),
@@ -65,9 +59,6 @@ impl StorageService {
     }
 
     pub fn delete(directory: String, file_name: String) -> Result<(), StorageServiceError> {
-        #[cfg(test)]
-        let directory = String::from("test");
-
         let path = format!(
             "{}/{directory}/{file_name}",
             Env::storage_dir(),

@@ -109,36 +109,32 @@ impl StorageDriver for Disk {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use env::Env;
-    use std::error::Error;
-
-    #[test]
-    fn test_store() -> Result<(), Box<dyn Error>> {
-        let path = Path::new("storage/test/store");
-        let expected = vec![10, 10, 10, 10, 10];
-        let mut actual = Vec::new();
-
-        // Disk::store(path, &mut expected.as_slice())?;
-
-        let mut file = File::open(path)?;
-        file.read_to_end(&mut actual)?;
-
-        assert_eq!(expected, actual);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_read() -> Result<(), Box<dyn Error>> {
-        let path = Path::new("storage/test/read");
-
-        {
-            File::create(path)?;
-        }
-
-        Disk::read(path)?;
-
-        Ok(())
-    }
+    // #[test]
+    // fn test_store() -> Result<(), Box<dyn Error>> {
+    //     let path = Path::new("storage/test/store");
+    //     let expected = vec![10, 10, 10, 10, 10];
+    //     let mut actual = Vec::new();
+    //
+    //     // Disk::store(path, &mut expected.as_slice())?;
+    //
+    //     let mut file = File::open(path)?;
+    //     file.read_to_end(&mut actual)?;
+    //
+    //     assert_eq!(expected, actual);
+    //
+    //     Ok(())
+    // }
+    //
+    // #[test]
+    // fn test_read() -> Result<(), Box<dyn Error>> {
+    //     let path = Path::new("storage/test/read");
+    //
+    //     {
+    //         File::create(path)?;
+    //     }
+    //
+    //     Disk::read(path)?;
+    //
+    //     Ok(())
+    // }
 }
