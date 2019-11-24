@@ -1,18 +1,23 @@
+use services::storage::StorageService;
+use super::StorageServiceError;
 use chrono::Utc;
 use env::Env;
 use rand::{self, distributions::Alphanumeric, Rng};
-use std::error::Error;
-use std::fmt;
 use std::fs::File;
 use std::path::Path;
-use storage_drivers::storage_router::StorageRouterError;
 use storage_drivers::StorageDriver;
 use storage_drivers::StorageRouter;
 
-pub struct StorageService;
+pub struct Service;
 
-impl StorageService {
-    pub fn store(directory: String, input: File) -> Result<String, StorageServiceError> {
+impl Service {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl StorageService for Service {
+    fn store(&self, directory: String, input: File) -> Result<String, StorageServiceError> {
         let timestamp = Utc::now().to_string();
         let random_bytes: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
@@ -41,7 +46,7 @@ impl StorageService {
         }
     }
 
-    pub fn read(directory: String, file_name: String) -> Result<File, StorageServiceError> {
+    fn read(&self, directory: String, file_name: String) -> Result<File, StorageServiceError> {
         let path = format!(
             "{}/{directory}/{file_name}",
             Env::storage_dir(),
@@ -58,7 +63,7 @@ impl StorageService {
         }
     }
 
-    pub fn delete(directory: String, file_name: String) -> Result<(), StorageServiceError> {
+    fn delete(&self, directory: String, file_name: String) -> Result<(), StorageServiceError> {
         let path = format!(
             "{}/{directory}/{file_name}",
             Env::storage_dir(),
@@ -73,31 +78,5 @@ impl StorageService {
                 Err(StorageServiceError::from(e))
             }
         }
-    }
-}
-
-pub struct StorageServiceError(StorageRouterError);
-
-impl Error for StorageServiceError {
-    fn description(&self) -> &str {
-        self.0.description()
-    }
-}
-
-impl fmt::Display for StorageServiceError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        self.0.fmt(f)
-    }
-}
-
-impl fmt::Debug for StorageServiceError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        self.0.fmt(f)
-    }
-}
-
-impl From<StorageRouterError> for StorageServiceError {
-    fn from(from: StorageRouterError) -> Self {
-        Self(from)
     }
 }
