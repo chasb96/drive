@@ -1,6 +1,6 @@
 use entities::traits::folder::FolderStore;
 use entities::models::{ File, Folder };
-use diesel::result::Error;
+use crate::entities::error::DataStoreError;
 use crate::entities::builders::{ Builder, FolderBuilder, FileBuilder };
 
 pub struct FolderStoreMock;
@@ -12,7 +12,7 @@ impl FolderStoreMock {
 }
 
 impl FolderStore for FolderStoreMock {
-    fn find_by_user_id(&self, user_id: i32) -> Result<Vec<Folder>, Error> {
+    fn find_by_user_id(&self, user_id: i32) -> Result<Vec<Folder>, DataStoreError> {
         let folders = vec![
             factory!(Folder, user_id, None),
             factory!(Folder, user_id, None),
@@ -24,7 +24,7 @@ impl FolderStore for FolderStoreMock {
         Ok(folders)
     }
 
-    fn find_by_folder_id(&self, folder_id: i32) -> Result<Folder, Error> {
+    fn find_by_folder_id(&self, folder_id: i32) -> Result<Folder, DataStoreError> {
         let mut folder = factory!(Folder, 1, None);
 
         folder.set_id(folder_id);
@@ -32,19 +32,19 @@ impl FolderStore for FolderStoreMock {
         Ok(folder)
     }
 
-    fn save(&self, folder: &Folder) -> Result<Folder, Error> {
+    fn save(&self, folder: &Folder) -> Result<Folder, DataStoreError> {
         Ok(folder.clone())
     }
 
-    fn update(&self, folder: &Folder) -> Result<Folder, Error> {
+    fn update(&self, folder: &Folder) -> Result<Folder, DataStoreError> {
         Ok(folder.clone())
     }
 
-    fn delete(&self, folder: &Folder) -> Result<Folder, Error> {
+    fn delete(&self, folder: &Folder) -> Result<Folder, DataStoreError> {
         Ok(folder.clone())
     }
 
-    fn files(&self, folder: &Folder) -> Result<Vec<File>, Error> {
+    fn files(&self, folder: &Folder) -> Result<Vec<File>, DataStoreError> {
         let files = vec![
             factory!(File, folder.id()),
             factory!(File, folder.id()),

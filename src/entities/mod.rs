@@ -3,6 +3,7 @@ pub mod models;
 pub mod presentation;
 pub mod traits;
 pub mod diesel;
+pub mod error;
 
 use self::models::Model;
 pub use self::diesel::pool::DbPool;

@@ -1,6 +1,6 @@
 use entities::traits::file::FileStore;
 use entities::models::File;
-use diesel::result::Error;
+use crate::entities::error::DataStoreError;
 use crate::entities::builders::{ Builder, FileBuilder };
 
 pub struct FileStoreMock;
@@ -12,7 +12,7 @@ impl FileStoreMock {
 }
 
 impl FileStore for FileStoreMock {
-    fn find_by_folder_id(&self, folder_id: i32) -> Result<Vec<File>, Error> {
+    fn find_by_folder_id(&self, folder_id: i32) -> Result<Vec<File>, DataStoreError> {
         let files = vec![
             factory!(File, folder_id),
             factory!(File, folder_id),
@@ -24,7 +24,7 @@ impl FileStore for FileStoreMock {
         Ok(files)
     }
 
-    fn find_by_file_id(&self, file_id: i32) -> Result<File, Error> {
+    fn find_by_file_id(&self, file_id: i32) -> Result<File, DataStoreError> {
         let mut file = factory!(File, 1);
 
         file.set_id(file_id);
@@ -32,15 +32,15 @@ impl FileStore for FileStoreMock {
         Ok(file)
     }
 
-    fn save(&self, file: &File) -> Result<File, Error> {
+    fn save(&self, file: &File) -> Result<File, DataStoreError> {
         Ok(file.clone())
     }
 
-    fn update(&self, file: &File) -> Result<File, Error> {
+    fn update(&self, file: &File) -> Result<File, DataStoreError> {
         Ok(file.clone())
     }
 
-    fn delete(&self, file: &File) -> Result<File, Error> {
+    fn delete(&self, file: &File) -> Result<File, DataStoreError> {
         Ok(file.clone())
     }
 }

@@ -1,7 +1,7 @@
 use super::super::query::Query;
 use entities::traits::user::UserStore;
 use entities::models::{Folder, User};
-use diesel::result::Error;
+use crate::entities::error::DataStoreError;
 use entities::diesel::DbFacade;
 use schema::*;
 use diesel::ExpressionMethods;
@@ -17,29 +17,41 @@ impl Store {
 }
 
 impl UserStore for Store {
-    fn find_by_user_id(&self, id: i32) -> Result<User, Error> {
-        User::all()
+    fn find_by_user_id(&self, id: i32) -> Result<User, DataStoreError> {
+        let user = User::all()
             .filter(users::id.eq(id))
-            .first::<User>(&DbFacade::connection())
+            .first::<User>(&DbFacade::connection())?;
+
+        Ok(user)
     }
 
-    fn save(&self, user: &User) -> Result<User, Error> {
-        user.save()
+    fn save(&self, user: &User) -> Result<User, DataStoreError> {
+        let user = user.save()?;
+
+        Ok(user)
     }
 
-    fn update(&self, user: &User) -> Result<User, Error> {
-        user.update()
+    fn update(&self, user: &User) -> Result<User, DataStoreError> {
+        let user = user.update()?;
+
+        Ok(user)
     }
 
-    fn delete(&self, user: &User) -> Result<User, Error> {
-        user.delete()
+    fn delete(&self, user: &User) -> Result<User, DataStoreError> {
+        let user = user.delete()?;
+
+        Ok(user)
     }
 
-    fn update_password(&self, user: &User) -> Result<User, Error> {
-        user.update_password()
+    fn update_password(&self, user: &User) -> Result<User, DataStoreError> {
+        let user = user.update_password()?;
+
+        Ok(user)
     }
 
-    fn folders(&self, user: &User) -> Result<Vec<Folder>, Error> {
-        user.folders()
+    fn folders(&self, user: &User) -> Result<Vec<Folder>, DataStoreError> {
+        let folders = user.folders()?;
+
+        Ok(folders)
     }
 }
