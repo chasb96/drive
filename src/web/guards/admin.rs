@@ -1,5 +1,5 @@
 use super::auth::Auth;
-use db::models::User;
+use entities::models::User;
 use rocket::http::Status;
 use rocket::request;
 use rocket::request::{FromRequest, Request};

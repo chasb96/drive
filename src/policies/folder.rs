@@ -1,5 +1,5 @@
 use super::Restrict;
-use db::models::{Folder, User};
+use entities::models::{Folder, User};
 
 impl Restrict<User> for Folder {
     fn viewable_by(&self, user: &User) -> bool {

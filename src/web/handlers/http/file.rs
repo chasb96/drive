@@ -1,4 +1,4 @@
-use db::models::{File, Folder, User};
+use entities::models::{File, Folder, User};
 use env::Env;
 use rocket::data::Data;
 use rocket::http::{ContentType, Status};
@@ -268,7 +268,7 @@ pub fn download(
     _name: String,
 ) -> impl Responder<'static> {
     let file_controller = resolve!(FileController);
-    let user = auth.clone().user();
+    let user: User = auth.clone().user();
 
     let stream = match file_controller.contents(user.clone(), file_id) {
         Ok(stream) => stream,

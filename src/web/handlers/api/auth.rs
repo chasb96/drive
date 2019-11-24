@@ -2,7 +2,7 @@ use auth::authenticate::Authenticate;
 use auth::basic::Credentials;
 use auth::bearer::Bearer;
 use auth::Auth;
-use db::models::User;
+use entities::models::User;
 use rocket::http::Status;
 use rocket::post;
 use rocket::response::Responder;

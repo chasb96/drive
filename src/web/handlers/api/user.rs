@@ -1,4 +1,4 @@
-use db::presentation::ToJson;
+use entities::presentation::ToJson;
 use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::{get, post};

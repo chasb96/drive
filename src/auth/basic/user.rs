@@ -1,6 +1,6 @@
 use super::{Basic, Error};
-use db::models::User;
-use db::DbPool;
+use entities::models::User;
+use entities::diesel::pool::DbPool;
 use diesel::{ExpressionMethods, QueryDsl, RunQueryDsl};
 use schema::*;
 

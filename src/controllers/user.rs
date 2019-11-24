@@ -1,6 +1,6 @@
 use super::ControllerError as Error;
-use db::models::User;
-use db::DbFacade;
+use entities::models::User;
+use entities::diesel::DbFacade;
 use diesel::result;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
@@ -57,11 +57,13 @@ impl UserController {
         role: String,
         password: String,
     ) -> Result<User, Error> {
+        let user_service = resolve!(UserService);
+
         if !user.can_create::<User>() {
             return Err(Error::Forbidden);
         }
 
-        match <resolve!(UserService)>::create(name, email, role, password) {
+        match user_service.create(name, email, role, password) {
             Ok(user) => Ok(user),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
@@ -95,6 +97,7 @@ impl UserController {
         email: String,
         role: String,
     ) -> Result<User, Error> {
+        let user_service = resolve!(UserService);
         let conn = &DbFacade::connection();
 
         let found: User = match User::all().filter(users::id.eq(&user_id)).first(conn) {
@@ -110,7 +113,7 @@ impl UserController {
             return Err(Error::Forbidden);
         }
 
-        match <resolve!(UserService)>::update(user_id, name, email, role) {
+        match user_service.update(user_id, name, email, role) {
             Ok(user) => Ok(user),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
@@ -120,6 +123,7 @@ impl UserController {
     }
 
     pub fn delete(user: User, user_id: i32) -> Result<User, Error> {
+        let user_service = resolve!(UserService);
         let conn = &DbFacade::connection();
 
         let found: User = match User::all().filter(users::id.eq(&user_id)).first(conn) {
@@ -135,7 +139,7 @@ impl UserController {
             return Err(Error::Forbidden);
         }
 
-        match <resolve!(UserService)>::delete(user_id) {
+        match user_service.delete(user_id) {
             Ok(user) => Ok(user),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
@@ -145,6 +149,7 @@ impl UserController {
     }
 
     pub fn update_password(user: User, user_id: i32, password: String) -> Result<User, Error> {
+        let user_service = resolve!(UserService);
         let conn = &DbFacade::connection();
 
         let found: User = match User::all().filter(users::id.eq(&user_id)).first(conn) {
@@ -160,7 +165,7 @@ impl UserController {
             return Err(Error::Forbidden);
         }
 
-        match <resolve!(UserService)>::update_password(user_id, password) {
+        match user_service.update_password(user_id, password) {
             Ok(user) => Ok(user),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);

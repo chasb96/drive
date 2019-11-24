@@ -1,4 +1,4 @@
-use db::models::{File, Folder, User};
+use entities::models::{File, Folder, User};
 use rocket::http::Status;
 use rocket::request::Form;
 use rocket::response::{Redirect, Responder};

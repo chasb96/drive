@@ -1,4 +1,4 @@
-use db::models::User;
+use entities::models::User;
 use rocket::http::Status;
 use rocket::request::Form;
 use rocket::response::{Redirect, Responder};

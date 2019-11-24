@@ -1,14 +1,12 @@
 pub mod implementation;
 
-use db::models::File;
+use entities::models::File;
 use services::error::ServiceError;
 
-#[cfg(test)]
-use mockiato::mockable;
-
-#[cfg_attr(test, mockable)]
 pub trait FileService {
     fn all(&self, folder_id: i32) -> Result<Vec<File>, ServiceError>;
+
+    fn find(&self, file_id: i32) -> Result<File, ServiceError>;
 
     fn create(
         &self,

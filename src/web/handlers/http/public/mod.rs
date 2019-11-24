@@ -1,5 +1,5 @@
-use db::builders::{Builder, UserBuilder};
-use db::models::{File, User};
+use entities::builders::{Builder, UserBuilder};
+use entities::models::{File, User};
 use env::Env;
 use rocket::get;
 use rocket::http::Status;

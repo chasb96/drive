@@ -1,41 +1,40 @@
 use super::ControllerError as Error;
-use db::models::{Folder, User};
-use db::DbFacade;
+use entities::models::{Folder, User};
 use diesel::result;
-use diesel::ExpressionMethods;
-use diesel::QueryDsl;
-use diesel::RunQueryDsl;
 use policies::Restricted;
-use schema::*;
 use services::FolderService;
 
 pub struct FolderController;
 
 impl FolderController {
     pub fn index(user: User, parent_id: Option<i32>) -> Result<Vec<Folder>, Error> {
+        let folder_service = resolve!(FolderService);
+
         if !user.can_index::<Folder>() {
             return Err(Error::Forbidden);
         }
 
-        let conn = &DbFacade::connection();
-
-        let stmt = Folder::all().filter(folders::user_id.eq(user.id()));
-
-        let stmt = match parent_id {
-            Some(parent_id) => stmt.filter(folders::parent_id.eq(parent_id)),
-            None => stmt.filter(folders::parent_id.is_null()),
+        let mut folders = match folder_service.all(user.id()) {
+            Ok(folders) => folders,
+            Err(result::Error::NotFound) => return Err(Error::NotFound),
+            Err(e) => {
+                log!("error", "500 Internal Server Error: {}", e);
+                return Err(Error::InternalServerError);
+            }
         };
 
-        match stmt.load(conn) {
-            Ok(folders) => Ok(folders),
-            Err(_) => Err(Error::InternalServerError),
-        }
+        match parent_id {
+            Some(parent_id) => folders.retain(| folder | folder.id() == parent_id),
+            None => folders.retain(| folder | folder.parent_id().is_none()),
+        };
+
+        Ok(folders)
     }
 
     pub fn show(user: User, folder_id: i32) -> Result<Folder, Error> {
-        let conn = &DbFacade::connection();
+        let folder_service = resolve!(FolderService);
 
-        let found: Folder = match Folder::all().filter(folders::id.eq(&folder_id)).first(conn) {
+        let found: Folder = match folder_service.find(folder_id) {
             Ok(folder) => folder,
             Err(result::Error::NotFound) => return Err(Error::NotFound),
             Err(e) => {
@@ -63,20 +62,22 @@ impl FolderController {
         user_id: i32,
         parent_id: Option<i32>,
     ) -> Result<Folder, Error> {
+        let folder_service = resolve!(FolderService);
+
         if !user.can_create::<Folder>() {
             return Err(Error::Forbidden);
         }
 
-        match <resolve!(FolderService)>::create(name, user_id, parent_id) {
+        match folder_service.create(name, user_id, parent_id) {
             Ok(folder) => Ok(folder),
             Err(_) => Err(Error::InternalServerError),
         }
     }
 
     pub fn edit(user: User, folder_id: i32) -> Result<Folder, Error> {
-        let conn = &DbFacade::connection();
+        let folder_service = resolve!(FolderService);
 
-        let found: Folder = match Folder::all().filter(folders::id.eq(&folder_id)).first(conn) {
+        let found: Folder = match folder_service.find(folder_id) {
             Ok(folder) => folder,
             Err(result::Error::NotFound) => return Err(Error::NotFound),
             Err(e) => {
@@ -98,9 +99,9 @@ impl FolderController {
         user_id: i32,
         parent_id: Option<i32>,
     ) -> Result<Folder, Error> {
-        let conn = &DbFacade::connection();
+        let folder_service = resolve!(FolderService);
 
-        let found: Folder = match Folder::all().filter(folders::id.eq(&folder_id)).first(conn) {
+        let found: Folder = match folder_service.find(folder_id) {
             Ok(folder) => folder,
             Err(result::Error::NotFound) => return Err(Error::NotFound),
             Err(e) => {
@@ -113,19 +114,20 @@ impl FolderController {
             return Err(Error::Forbidden);
         }
 
-        match <resolve!(FolderService)>::update(folder_id, name, user_id, parent_id) {
+        match folder_service.update(folder_id, name, user_id, parent_id) {
             Ok(folder) => Ok(folder),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
-                return Err(Error::InternalServerError);
+
+                Err(Error::InternalServerError)
             }
         }
     }
 
     pub fn delete(user: User, folder_id: i32) -> Result<Folder, Error> {
-        let conn = &DbFacade::connection();
+        let folder_service = resolve!(FolderService);
 
-        let found: Folder = match Folder::all().filter(folders::id.eq(&folder_id)).first(conn) {
+        let found: Folder = match folder_service.find(folder_id) {
             Ok(folder) => folder,
             Err(result::Error::NotFound) => return Err(Error::NotFound),
             Err(e) => {
@@ -138,11 +140,12 @@ impl FolderController {
             return Err(Error::Forbidden);
         }
 
-        match <resolve!(FolderService)>::delete(folder_id) {
+        match folder_service.delete(folder_id) {
             Ok(folder) => Ok(folder),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
-                return Err(Error::InternalServerError);
+
+                Err(Error::InternalServerError)
             }
         }
     }
