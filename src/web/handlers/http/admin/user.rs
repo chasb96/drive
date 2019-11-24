@@ -18,7 +18,7 @@ pub struct IndexContext {
 
 #[get("/admin/users")]
 pub fn index(admin: Admin, state: State) -> impl Responder<'static> {
-    let user = admin.clone().user();
+    let user = admin.user();
 
     let users = match <resolve!(UserController)>::index(user.clone()) {
         Ok(users) => users,
@@ -46,7 +46,7 @@ pub struct ShowContext {
 
 #[get("/admin/users/<user_id>")]
 pub fn show(admin: Admin, state: State, user_id: i32) -> impl Responder<'static> {
-    let user = admin.clone().user();
+    let user = admin.user();
 
     let show = match <resolve!(UserController)>::show(user.clone(), user_id) {
         Ok(user) => user,
@@ -73,7 +73,7 @@ pub struct CreateContext {
 
 #[get("/admin/users/create")]
 pub fn create(admin: Admin, state: State) -> impl Responder<'static> {
-    let user = admin.clone().user();
+    let user = admin.user();
 
     if let Err(e) = <resolve!(UserController)>::create(user.clone()) {
         return Err(Status::from(e));
@@ -98,7 +98,7 @@ pub fn store(
     mut state: State,
     payload: Form<StorePayload>,
 ) -> impl Responder<'static> {
-    let user = admin.clone().user();
+    let user = admin.user();
 
     let user = match <resolve!(UserController)>::store(
         user.clone(),
@@ -135,7 +135,7 @@ pub struct EditContext {
 
 #[get("/admin/users/<user_id>/edit")]
 pub fn edit(admin: Admin, state: State, user_id: i32) -> impl Responder<'static> {
-    let user = admin.clone().user();
+    let user = admin.user();
 
     let edit = match <resolve!(UserController)>::edit(user.clone(), user_id) {
         Ok(edit) => edit,
@@ -164,7 +164,7 @@ pub struct UpdatePayload {
 
 #[post("/admin/users/<user_id>", data = "<payload>")]
 pub fn update(admin: Admin, user_id: i32, payload: Form<UpdatePayload>) -> impl Responder<'static> {
-    let user = admin.clone().user();
+    let user = admin.user();
 
     match <resolve!(UserController)>::update(
         user,
@@ -180,7 +180,7 @@ pub fn update(admin: Admin, user_id: i32, payload: Form<UpdatePayload>) -> impl 
 
 #[post("/admin/users/<user_id>/delete")]
 pub fn delete(admin: Admin, user_id: i32) -> impl Responder<'static> {
-    let user = admin.clone().user();
+    let user = admin.user();
 
     if user.id() == user_id {
         return Err(Status::Forbidden);

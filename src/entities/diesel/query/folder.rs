@@ -60,6 +60,7 @@ impl Query for Folder {
 }
 
 impl<'insert> Insertable<folders::table> for &'insert Folder {
+    #[allow(clippy::type_complexity)]
     type Values = <(
         Eq<folders::name, &'insert String>,
         Eq<folders::parent_id, &'insert Option<i32>>,

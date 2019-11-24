@@ -92,7 +92,7 @@ impl User {
         self.role = role
     }
 
-    pub fn password_check(&self, password: &String) -> bool {
+    pub fn password_check(&self, password: &str) -> bool {
         match verify(password, &self.password) {
             Ok(true) => true,
             _ => false,

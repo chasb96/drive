@@ -66,6 +66,7 @@ impl Query for File {
 }
 
 impl<'insert> Insertable<files::table> for &'insert File {
+    #[allow(clippy::type_complexity)]
     type Values = <(
         Eq<files::name, &'insert String>,
         Eq<files::file_name, &'insert String>,

@@ -12,9 +12,12 @@ impl Basic for User {
             .filter(users::email.eq(email))
             .first::<Self>(&conn)
         {
-            Ok(user) => match user.password_check(&password) {
-                true => Ok(user),
-                false => Err(Error::CredentialsInvalid),
+            Ok(user) => {
+                if user.password_check(&password) {
+                    Ok(user)
+                } else {
+                    Err(Error::CredentialsInvalid)
+                }
             },
             Err(_) => Err(Error::CredentialsInvalid),
         }

@@ -44,7 +44,7 @@ impl TryFrom<&str> for LoggerOption {
 }
 
 impl Log for LoggerOption {
-    fn log(&mut self, level: &LogLevel, msg: &str) {
+    fn log(&mut self, level: LogLevel, msg: &str) {
         match self {
             LoggerOption::File(logger) => logger.log(level, msg),
             LoggerOption::StdOut(logger) => logger.log(level, msg),

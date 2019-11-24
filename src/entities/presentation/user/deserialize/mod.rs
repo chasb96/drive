@@ -7,7 +7,7 @@ use entities::models::User;
 use entities::presentation::FromJson;
 use serde::de::{Deserialize, Deserializer};
 
-const FIELDS: &'static [&'static str] = &["user_id", "email", "name", "role"];
+const FIELDS: &[&str] = &["user_id", "email", "name", "role"];
 
 impl<'de> Deserialize<'de> for User {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

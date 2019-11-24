@@ -8,7 +8,7 @@ use web::guards::auth::Auth;
 
 #[get("/folders?<parent_id>")]
 pub fn index(auth: Auth, parent_id: Option<i32>) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     let folders = match <resolve!(FolderController)>::index(user.clone(), parent_id) {
         Ok(folders) => folders,
@@ -28,7 +28,7 @@ pub fn index(auth: Auth, parent_id: Option<i32>) -> impl Responder<'static> {
 
 #[get("/folders/<folder_id>")]
 pub fn show(auth: Auth, folder_id: i32) -> impl Responder<'static> {
-    let user = auth.to_owned().user();
+    let user = auth.user();
 
     let folder = match <resolve!(FolderController)>::show(user.clone(), folder_id) {
         Ok(folder) => folder,
@@ -54,7 +54,7 @@ pub struct StorePayload {
 
 #[post("/folders", data = "<payload>")]
 pub fn store(auth: Auth, payload: Json<StorePayload>) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     match <resolve!(FolderController)>::store(
         user.clone(),
@@ -70,7 +70,8 @@ pub fn store(auth: Auth, payload: Json<StorePayload>) -> impl Responder<'static>
                 user.id(),
                 e
             );
-            return Err(Status::from(e));
+
+            Err(Status::from(e))
         }
     }
 }
@@ -83,7 +84,7 @@ pub struct UpdatePayload {
 
 #[post("/folders/<folder_id>", data = "<payload>")]
 pub fn update(auth: Auth, folder_id: i32, payload: Json<UpdatePayload>) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     match <resolve!(FolderController)>::update(
         user.clone(),

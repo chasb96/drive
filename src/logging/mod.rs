@@ -20,7 +20,7 @@ pub fn log_msg(level: &str, msg: &str) {
 
     let mut logger = LOGGER.lock().unwrap();
 
-    logger.log(&level, msg)
+    logger.log(level, msg)
 }
 
 macro_rules! log {
@@ -38,5 +38,5 @@ macro_rules! log {
 }
 
 trait Log {
-    fn log(&mut self, level: &LogLevel, msg: &str);
+    fn log(&mut self, level: LogLevel, msg: &str);
 }

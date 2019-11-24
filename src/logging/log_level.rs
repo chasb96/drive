@@ -14,7 +14,7 @@ pub enum LogLevel {
 }
 
 impl LogLevel {
-    pub fn is_on(&self) -> bool {
+    pub fn is_on(self) -> bool {
         !self.eq(&LogLevel::Off)
     }
 }

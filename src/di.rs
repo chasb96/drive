@@ -18,7 +18,7 @@ macro_rules! resolve {
     };
 
     (StorageService) => {
-        crate::services::StorageService
+        crate::services::storage::implementation::Service::new()
     };
 
     (FileController) => {

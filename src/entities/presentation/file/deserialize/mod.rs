@@ -7,7 +7,7 @@ use entities::models::File;
 use entities::presentation::FromJson;
 use serde::de::{Deserialize, Deserializer};
 
-const FIELDS: &'static [&'static str] = &["file_id", "name", "folder_id", "public", "extension"];
+const FIELDS: &[&str] = &["file_id", "name", "folder_id", "public", "extension"];
 
 impl<'de> Deserialize<'de> for File {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

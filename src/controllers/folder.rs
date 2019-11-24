@@ -43,16 +43,18 @@ impl FolderController {
             }
         };
 
-        match user.can_view(found.clone()) {
-            true => Ok(found),
-            false => Err(Error::Forbidden),
+        if user.can_view(found.clone()) {
+            Ok(found)
+        } else {
+            Err(Error::Forbidden)
         }
     }
 
     pub fn create(user: User) -> Result<(), Error> {
-        match user.can_create::<Folder>() {
-            true => Ok(()),
-            false => Err(Error::Forbidden),
+        if user.can_create::<Folder>() {
+            Ok(())
+        } else {
+            Err(Error::Forbidden)
         }
     }
 
@@ -86,9 +88,10 @@ impl FolderController {
             }
         };
 
-        match user.can_modify(found.clone()) {
-            true => Ok(found),
-            false => Err(Error::Forbidden),
+        if user.can_modify(found.clone()) {
+            Ok(found)
+        } else {
+            Err(Error::Forbidden)
         }
     }
 
@@ -110,7 +113,7 @@ impl FolderController {
             }
         };
 
-        if !user.can_modify(found.clone()) {
+        if !user.can_modify(found) {
             return Err(Error::Forbidden);
         }
 
@@ -136,7 +139,7 @@ impl FolderController {
             }
         };
 
-        if !user.can_delete(found.clone()) {
+        if !user.can_delete(found) {
             return Err(Error::Forbidden);
         }
 

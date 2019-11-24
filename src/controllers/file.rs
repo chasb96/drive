@@ -11,9 +11,20 @@ use std::fs;
 use crate::services::FileService;
 use services::error::ServiceError;
 use entities::models::User;
+use crate::services::StorageService;
 
 pub struct FileController<S: FileService> {
-    file_service: S,
+    file_service: S
+}
+
+pub struct StoreRequest {
+    pub user: User,
+    pub name: String,
+    pub extension: String,
+    pub user_id: i32,
+    pub folder_id: i32,
+    pub public: bool,
+    pub input: fs::File,
 }
 
 impl<T: FileService> FileController<T> {
@@ -51,51 +62,44 @@ impl<T: FileService> FileController<T> {
             }
         };
 
-        match user.can_view(found.clone()) {
-            true => Ok(found),
-            false => {
-                log!(
-                    "info",
-                    "403 Forbidden. Viewing Files not allowed for user {}",
-                    user.id()
-                );
-                Err(Error::Forbidden)
-            }
+        if user.can_view(found.clone()) {
+            Ok(found)
+        } else {
+            log!(
+                "info",
+                "403 Forbidden. Viewing Files not allowed for user {}",
+                user.id()
+            );
+
+            Err(Error::Forbidden)
         }
     }
 
     pub fn create(&self, user: User) -> Result<(), Error> {
-        match user.can_create::<File>() {
-            true => Ok(()),
-            false => {
-                log!(
-                    "info",
-                    "403 Forbidden. Creating Files not allowed for user {}",
-                    user.id()
-                );
-                Err(Error::Forbidden)
-            }
+        if user.can_create::<File>() {
+            Ok(())
+        } else {
+            log!(
+                "info",
+                "403 Forbidden. Creating Files not allowed for user {}",
+                user.id()
+            );
+
+            Err(Error::Forbidden)
         }
     }
 
-    pub fn store(
-        &self,
-        user: User,
-        name: String,
-        extension: String,
-        user_id: i32,
-        folder_id: i32,
-        public: bool,
-        input: fs::File,
-    ) -> Result<File, Error> {
+    pub fn store(&self, request: StoreRequest) -> Result<File, Error> {
         let file_service = resolve!(FileService);
-        if !user.can_create::<File>() {
+        let storage_service = resolve!(StorageService);
+
+        if !request.user.can_create::<File>() {
             return Err(Error::Forbidden);
         }
 
-        let file_name = <resolve!(StorageService)>::store(user_id.to_string(), input).unwrap();
+        let file_name = storage_service.store(request.user_id.to_string(), request.input).unwrap();
 
-        match file_service.create(name, extension, file_name, folder_id, public) {
+        match file_service.create(request.name, request.extension, file_name, request.folder_id, request.public) {
             Ok(file) => Ok(file),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
@@ -163,6 +167,8 @@ impl<T: FileService> FileController<T> {
 
     pub fn delete(&self, user: User, file_id: i32) -> Result<File, Error> {
         let file_service = resolve!(FileService);
+        let storage_service = resolve!(StorageService);
+
         let conn = &DbFacade::connection();
 
         let found: File = match File::all().filter(files::id.eq(&file_id)).first(conn) {
@@ -183,7 +189,7 @@ impl<T: FileService> FileController<T> {
             return Err(Error::Forbidden);
         }
 
-        if <resolve!(StorageService)>::delete(user.id().to_string(), found.file_name().to_string()).is_err()
+        if storage_service.delete(user.id().to_string(), found.file_name().to_string()).is_err()
         {
             return Err(Error::InternalServerError);
         }
@@ -198,6 +204,7 @@ impl<T: FileService> FileController<T> {
     }
 
     pub fn contents(&self, user: User, file_id: i32) -> Result<fs::File, Error> {
+        let storage_service = resolve!(StorageService);
         let conn = &DbFacade::connection();
 
         let found: File = match File::all().filter(files::id.eq(&file_id)).first(conn) {
@@ -221,7 +228,7 @@ impl<T: FileService> FileController<T> {
             return Err(Error::Forbidden);
         }
 
-        match <resolve!(StorageService)>::read(owner.to_string(), found.file_name().to_string()) {
+        match storage_service.read(owner.to_string(), found.file_name().to_string()) {
             Ok(contents) => Ok(contents),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);

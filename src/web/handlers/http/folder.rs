@@ -26,7 +26,7 @@ struct FolderContext {
 #[get("/folders/<folder_id>")]
 pub fn show(auth: Auth, state: State, folder_id: i32) -> impl Responder<'static> {
     let file_controller = resolve!(FileController);
-    let user = auth.to_owned().user();
+    let user = auth.user();
 
     let folder = match <resolve!(FolderController)>::show(user.clone(), folder_id) {
         Ok(folder) => folder,
@@ -85,7 +85,7 @@ pub struct CreateContext {
 
 #[get("/folders/create?<folder_id>")]
 pub fn create(auth: Auth, state: State, folder_id: Option<i32>) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     let mut parent = None;
     if let Some(folder_id) = folder_id {
@@ -108,7 +108,7 @@ pub fn create(auth: Auth, state: State, folder_id: Option<i32>) -> impl Responde
         parent,
     });
 
-    match <resolve!(FolderController)>::create(user.clone()) {
+    match <resolve!(FolderController)>::create(user) {
         Ok(_) => Ok(Template::render("folder/create", &context)),
         Err(e) => Err(Status::from(e)),
     }
@@ -126,7 +126,7 @@ pub fn store(
     folder_id: Option<i32>,
     payload: Form<StorePayload>,
 ) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     match <resolve!(FolderController)>::store(user.clone(), payload.name.to_owned(), user.id(), folder_id) {
         Ok(folder) => {
@@ -150,7 +150,7 @@ pub struct EditContext {
 
 #[get("/folders/<folder_id>/edit")]
 pub fn edit(auth: Auth, state: State, folder_id: i32) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     let mut parent = None;
     let folder = match <resolve!(FolderController)>::edit(user.clone(), folder_id) {
@@ -198,7 +198,7 @@ pub struct UpdatePayload {
 
 #[post("/folders/<folder_id>", data = "<payload>")]
 pub fn update(auth: Auth, folder_id: i32, payload: Form<UpdatePayload>) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     match <resolve!(FolderController)>::update(
         user.clone(),

@@ -7,7 +7,7 @@ use entities::models::Folder;
 use entities::presentation::FromJson;
 use serde::de::{Deserialize, Deserializer};
 
-const FIELDS: &'static [&'static str] = &["folder_id", "name", "parent_id", "user_id"];
+const FIELDS: &[&str] = &["folder_id", "name", "parent_id", "user_id"];
 
 impl<'de> Deserialize<'de> for Folder {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

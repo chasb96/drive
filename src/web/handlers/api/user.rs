@@ -8,7 +8,7 @@ use web::guards::auth::Auth;
 
 #[get("/users")]
 pub fn index(auth: Auth) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     let users = match <resolve!(UserController)>::index(user.clone()) {
         Ok(users) => users,
@@ -28,7 +28,7 @@ pub fn index(auth: Auth) -> impl Responder<'static> {
 
 #[get("/users/<user_id>")]
 pub fn show(auth: Auth, user_id: i32) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     let show = match <resolve!(UserController)>::show(user.clone(), user_id) {
         Ok(user) => user,
@@ -55,7 +55,7 @@ pub struct StorePayload {
 
 #[post("/users", data = "<payload>")]
 pub fn store(auth: Auth, payload: Json<StorePayload>) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     match <resolve!(UserController)>::store(
         user.clone(),
@@ -88,7 +88,7 @@ pub struct UpdatePayload {
 
 #[post("/users/<user_id>", data = "<payload>")]
 pub fn update(auth: Auth, user_id: i32, payload: Json<UpdatePayload>) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     if !user.password_check(&payload.password) {
         return Err(Status::Forbidden);
@@ -108,7 +108,7 @@ pub fn update(auth: Auth, user_id: i32, payload: Json<UpdatePayload>) -> impl Re
 
 #[post("/users/<user_id>/delete")]
 pub fn delete(auth: Auth, user_id: i32) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user = auth.user();
 
     match <resolve!(UserController)>::delete(user, user_id) {
         Ok(_) => Ok(Status::Ok),

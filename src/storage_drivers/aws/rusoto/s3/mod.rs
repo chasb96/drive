@@ -45,7 +45,7 @@ impl StorageDriver for S3 {
 
         let request = PutObjectRequest {
             body: Some(ByteStream::new(stream)),
-            bucket: bucket,
+            bucket,
             key: path.to_str().unwrap().to_string(),
             content_length: Some(len as i64),
             ..Default::default()
@@ -65,7 +65,7 @@ impl StorageDriver for S3 {
         let client = S3Client::new_with(HttpClient::new().unwrap(), provider, region);
 
         let request = GetObjectRequest {
-            bucket: bucket,
+            bucket,
             key: path.to_str().unwrap().to_string(),
             ..Default::default()
         };
@@ -127,7 +127,7 @@ impl StorageDriver for S3 {
         let client = S3Client::new_with(HttpClient::new().unwrap(), provider, region);
 
         let request = DeleteObjectRequest {
-            bucket: bucket,
+            bucket,
             key: path.to_str().unwrap().to_string(),
             ..Default::default()
         };

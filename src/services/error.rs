@@ -16,12 +16,12 @@ impl error::Error for ServiceError {}
 impl fmt::Debug for ServiceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ServiceError::InvalidConnectionString => write!(f, "{}", "Invalid Connection String"),
-            ServiceError::DatabaseError => write!(f, "{}", "DatabaseError"),
-            ServiceError::NotFound => write!(f, "{}", "Not Found"),
-            ServiceError::QueryBuilderError => write!(f, "{}", "Query Builder Error"),
-            ServiceError::SerializationError => write!(f, "{}", "Serialization Error"),
-            ServiceError::AlreadyInTransaction => write!(f, "{}", "Already In Transaction"),
+            ServiceError::InvalidConnectionString => write!(f, "Invalid Connection String"),
+            ServiceError::DatabaseError => write!(f, "DatabaseError"),
+            ServiceError::NotFound => write!(f, "Not Found"),
+            ServiceError::QueryBuilderError => write!(f, "Query Builder Error"),
+            ServiceError::SerializationError => write!(f, "Serialization Error"),
+            ServiceError::AlreadyInTransaction => write!(f, "Already In Transaction"),
         }
     }
 }
@@ -29,12 +29,12 @@ impl fmt::Debug for ServiceError {
 impl fmt::Display for ServiceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ServiceError::InvalidConnectionString => write!(f, "{}", "Invalid Connection String"),
-            ServiceError::DatabaseError => write!(f, "{}", "DatabaseError"),
-            ServiceError::NotFound => write!(f, "{}", "Not Found"),
-            ServiceError::QueryBuilderError => write!(f, "{}", "Query Builder Error"),
-            ServiceError::SerializationError => write!(f, "{}", "Serialization Error"),
-            ServiceError::AlreadyInTransaction => write!(f, "{}", "Already In Transaction"),
+            ServiceError::InvalidConnectionString => write!(f, "Invalid Connection String"),
+            ServiceError::DatabaseError => write!(f, "DatabaseError"),
+            ServiceError::NotFound => write!(f, "Not Found"),
+            ServiceError::QueryBuilderError => write!(f, "Query Builder Error"),
+            ServiceError::SerializationError => write!(f, "Serialization Error"),
+            ServiceError::AlreadyInTransaction => write!(f, "Already In Transaction"),
         }
     }
 }

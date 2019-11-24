@@ -58,7 +58,7 @@ impl<'de> Visitor<'de> for UserVisitor {
         let user_id = user_id.ok_or_else(|| de::Error::missing_field("user_id"))?;
         let email = email.ok_or_else(|| de::Error::missing_field("email"))?;
         let name = name.ok_or_else(|| de::Error::missing_field("name"))?;
-        let role = role.or(Some(String::from("user"))).unwrap();
+        let role = role.unwrap_or_else(|| String::from("user"));
 
         let user = UserBuilder::new()
             .with_id(user_id)

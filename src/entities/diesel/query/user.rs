@@ -79,6 +79,7 @@ impl<'insert> Insertable<users::table> for &'insert User {
     // Instead of implementing Insertable on the entire table,
     //  we're going to implement Insertable for the two columns we want,
     //  as the table's insert statement
+    #[allow(clippy::type_complexity)]
     type Values = <(
         Eq<users::name, &'insert String>,
         Eq<users::email, &'insert String>,

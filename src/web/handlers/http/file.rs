@@ -1,3 +1,4 @@
+use controllers::file::StoreRequest;
 use entities::models::{File, Folder, User};
 use env::Env;
 use rocket::data::Data;
@@ -32,7 +33,7 @@ pub struct ShowContext {
 #[get("/folders/<_folder_id>/files/<file_id>", rank = 2)]
 pub fn show(auth: Auth, state: State, _folder_id: i32, file_id: i32) -> impl Responder<'static> {
     let file_controller = resolve!(FileController);
-    let user = auth.clone().user();
+    let user = auth.user();
 
     let file = match file_controller.show(user.clone(), file_id) {
         Ok(file) => file,
@@ -74,7 +75,7 @@ pub struct CreateContext {
 #[get("/folders/<folder_id>/files/create", rank = 1)]
 pub fn create(auth: Auth, state: State, folder_id: i32) -> impl Responder<'static> {
     let file_controller = resolve!(FileController);
-    let user = auth.clone().user();
+    let user = auth.user();
 
     if let Err(e) = file_controller.create(user.clone()) {
         return Err(Status::from(e));
@@ -110,7 +111,7 @@ pub fn store(
     let mut options = MultipartFormDataOptions::new();
     options
         .allowed_fields
-        .push(MultipartFormDataField::file("file").size_limit(10000000000));
+        .push(MultipartFormDataField::file("file").size_limit(10_000_000_000));
 
     let multipart_form_data = MultipartFormData::parse(content_type, payload, options).unwrap();
 
@@ -133,19 +134,21 @@ pub fn store(
         _ => return Err(Status::BadRequest),
     };
 
-    let user = auth.to_owned().user();
+    let user = auth.user();
 
-    let mut parts = name.splitn(2, ".");
+    let mut parts = name.splitn(2, '.');
 
-    let stored = match file_controller.store(
-        user.clone(),
-        parts.nth(0).unwrap_or("").to_string(),
-        parts.nth(0).unwrap_or("").to_string(),
-        user.id(),
+    let store_request = StoreRequest {
+        user: user.clone(),
+        name: parts.nth(0).unwrap_or("").to_string(),
+        extension: parts.nth(0).unwrap_or("").to_string(),
+        user_id: user.id(),
         folder_id,
-        false,
-        file,
-    ) {
+        public: false,
+        input: file,
+    };
+
+    let stored = match file_controller.store(store_request) {
         Ok(file) => file,
         Err(e) => {
             log!(
@@ -181,7 +184,7 @@ pub struct EditContext {
 #[get("/folders/<_folder_id>/files/<file_id>/edit")]
 pub fn edit(auth: Auth, state: State, _folder_id: i32, file_id: i32) -> impl Responder<'static> {
     let file_controller = resolve!(FileController);
-    let user = auth.clone().user();
+    let user = auth.user();
 
     let file = match file_controller.edit(user.clone(), file_id) {
         Ok(file) => file,
@@ -230,10 +233,10 @@ pub fn update(
     payload: Form<UpdatePayload>,
 ) -> impl Responder<'static> {
     let file_controller = resolve!(FileController);
-    let user = auth.clone().user();
+    let user = auth.user();
 
     match file_controller.update(
-        user.clone(),
+        user,
         file_id,
         payload.name.to_owned(),
         payload.extension.to_owned(),
@@ -268,7 +271,7 @@ pub fn download(
     _name: String,
 ) -> impl Responder<'static> {
     let file_controller = resolve!(FileController);
-    let user: User = auth.clone().user();
+    let user: User = auth.user();
 
     let stream = match file_controller.contents(user.clone(), file_id) {
         Ok(stream) => stream,

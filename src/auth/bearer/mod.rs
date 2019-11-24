@@ -10,6 +10,7 @@ use serde::ser::Serialize;
 use serde_json::json;
 use serde_json::Map;
 use serde_json::Value;
+use std::fmt;
 
 pub trait Bearer: Sized + Serialize {
     fn header(&self) -> Value {
@@ -31,12 +32,12 @@ pub trait Bearer: Sized + Serialize {
         Ok(token_string)
     }
 
-    fn decode(token: &String) -> Result<Value, Error> {
+    fn decode(token: &str) -> Result<Value, Error> {
         let secret = Env::app_key();
 
         match decode(token, &secret, Algorithm::HS384) {
             Ok((_, payload)) => Ok(payload),
-            Err(e) => return Err(Error::from(e)),
+            Err(e) => Err(Error::from(e)),
         }
     }
 
@@ -51,10 +52,6 @@ impl Token {
     pub fn new(token: String) -> Self {
         Token { token }
     }
-
-    pub fn to_string(&self) -> String {
-        String::from(&self.token)
-    }
 }
 
 impl<T: Bearer> Authenticate<T> for Token {
@@ -64,5 +61,11 @@ impl<T: Bearer> Authenticate<T> for Token {
         let decoded = T::decode(&self.token)?;
 
         T::verify(decoded)
+    }
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.token)
     }
 }
