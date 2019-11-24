@@ -12,6 +12,8 @@ use crate::services::FileService;
 use services::error::ServiceError;
 use entities::models::User;
 use crate::services::StorageService;
+use crate::services::file::CreateRequest;
+use crate::services::file::UpdateRequest;
 
 pub struct FileController<S: FileService> {
     file_service: S
@@ -99,7 +101,15 @@ impl<T: FileService> FileController<T> {
 
         let file_name = storage_service.store(request.user_id.to_string(), request.input).unwrap();
 
-        match file_service.create(request.name, request.extension, file_name, request.folder_id, request.public) {
+        let file_create_request = CreateRequest {
+            name: request.name,
+            extension: request.extension,
+            file_name,
+            folder_id: request.folder_id,
+            public: request.public,
+        };
+
+        match file_service.create(file_create_request) {
             Ok(file) => Ok(file),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
@@ -149,14 +159,16 @@ impl<T: FileService> FileController<T> {
             return Err(Error::Forbidden);
         }
 
-        match file_service.update(
-            file_id,
+        let file_update_request = UpdateRequest {
+            id: file_id,
             name,
-            found.file_name().to_string(),
+            file_name: found.file_name().to_string(),
             extension,
             folder_id,
-            public,
-        ) {
+            public
+        };
+
+        match file_service.update(file_update_request) {
             Ok(file) => Ok(file),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);

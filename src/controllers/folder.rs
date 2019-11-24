@@ -1,8 +1,10 @@
 use super::ControllerError as Error;
 use entities::models::{Folder, User};
-use diesel::result;
 use policies::Restricted;
 use services::FolderService;
+use crate::services::folder::CreateRequest;
+use crate::services::folder::UpdateRequest;
+use crate::services::error::ServiceError;
 
 pub struct FolderController;
 
@@ -16,7 +18,7 @@ impl FolderController {
 
         let mut folders = match folder_service.all(user.id()) {
             Ok(folders) => folders,
-            Err(result::Error::NotFound) => return Err(Error::NotFound),
+            Err(ServiceError::NotFound) => return Err(Error::NotFound),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
                 return Err(Error::InternalServerError);
@@ -36,7 +38,7 @@ impl FolderController {
 
         let found: Folder = match folder_service.find(folder_id) {
             Ok(folder) => folder,
-            Err(result::Error::NotFound) => return Err(Error::NotFound),
+            Err(ServiceError::NotFound) => return Err(Error::NotFound),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
                 return Err(Error::InternalServerError);
@@ -70,7 +72,13 @@ impl FolderController {
             return Err(Error::Forbidden);
         }
 
-        match folder_service.create(name, user_id, parent_id) {
+        let request = CreateRequest {
+            name,
+            user_id,
+            parent_id,
+        };
+
+        match folder_service.create(request) {
             Ok(folder) => Ok(folder),
             Err(_) => Err(Error::InternalServerError),
         }
@@ -81,7 +89,7 @@ impl FolderController {
 
         let found: Folder = match folder_service.find(folder_id) {
             Ok(folder) => folder,
-            Err(result::Error::NotFound) => return Err(Error::NotFound),
+            Err(ServiceError::NotFound) => return Err(Error::NotFound),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
                 return Err(Error::InternalServerError);
@@ -106,7 +114,7 @@ impl FolderController {
 
         let found: Folder = match folder_service.find(folder_id) {
             Ok(folder) => folder,
-            Err(result::Error::NotFound) => return Err(Error::NotFound),
+            Err(ServiceError::NotFound) => return Err(Error::NotFound),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
                 return Err(Error::InternalServerError);
@@ -117,7 +125,14 @@ impl FolderController {
             return Err(Error::Forbidden);
         }
 
-        match folder_service.update(folder_id, name, user_id, parent_id) {
+        let request = UpdateRequest {
+            id: folder_id,
+            name,
+            user_id,
+            parent_id
+        };
+
+        match folder_service.update(request) {
             Ok(folder) => Ok(folder),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
@@ -132,7 +147,7 @@ impl FolderController {
 
         let found: Folder = match folder_service.find(folder_id) {
             Ok(folder) => folder,
-            Err(result::Error::NotFound) => return Err(Error::NotFound),
+            Err(ServiceError::NotFound) => return Err(Error::NotFound),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
                 return Err(Error::InternalServerError);

@@ -1,5 +1,5 @@
+use services::error::ServiceError;
 use services::storage::StorageService;
-use super::StorageServiceError;
 use chrono::Utc;
 use env::Env;
 use rand::{self, distributions::Alphanumeric, Rng};
@@ -17,7 +17,7 @@ impl Service {
 }
 
 impl StorageService for Service {
-    fn store(&self, directory: String, input: File) -> Result<String, StorageServiceError> {
+    fn store(&self, directory: String, input: File) -> Result<String, ServiceError> {
         let timestamp = Utc::now().to_string();
         let random_bytes: String = rand::thread_rng()
             .sample_iter(&Alphanumeric)
@@ -41,12 +41,12 @@ impl StorageService for Service {
             Ok(_) => Ok(file_name),
             Err(e) => {
                 log!("error", "Failed to store file: {}", e);
-                Err(StorageServiceError::from(e))
+                Err(ServiceError::from(e))
             }
         }
     }
 
-    fn read(&self, directory: String, file_name: String) -> Result<File, StorageServiceError> {
+    fn read(&self, directory: String, file_name: String) -> Result<File, ServiceError> {
         let path = format!(
             "{}/{directory}/{file_name}",
             Env::storage_dir(),
@@ -58,12 +58,12 @@ impl StorageService for Service {
             Ok(contents) => Ok(contents),
             Err(e) => {
                 log!("error", "Failed to read file: {}", e);
-                Err(StorageServiceError::from(e))
+                Err(ServiceError::from(e))
             }
         }
     }
 
-    fn delete(&self, directory: String, file_name: String) -> Result<(), StorageServiceError> {
+    fn delete(&self, directory: String, file_name: String) -> Result<(), ServiceError> {
         let path = format!(
             "{}/{directory}/{file_name}",
             Env::storage_dir(),
@@ -75,7 +75,7 @@ impl StorageService for Service {
             Ok(_) => Ok(()),
             Err(e) => {
                 log!("error", "Failed to delete file: {}", e);
-                Err(StorageServiceError::from(e))
+                Err(ServiceError::from(e))
             }
         }
     }

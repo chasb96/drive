@@ -65,6 +65,7 @@ use diesel::QueryDsl;
 use diesel::RunQueryDsl;
 use schema::*;
 use services::UserService;
+use crate::services::user::CreateRequest;
 
 fn seed() {
     let user_service = resolve!(UserService);
@@ -75,13 +76,14 @@ fn seed() {
     {
         Ok(_) => {}
         Err(_) => {
-            user_service.create(
-                "Temp Admin".to_string(),
-                "temp@temp.com".to_string(),
-                "admin".to_string(),
-                "password".to_string(),
-            )
-            .unwrap();
+            let request = CreateRequest {
+                name: "Temp Admin".to_string(),
+                email: "temp@temp.com".to_string(),
+                role: "admin".to_string(),
+                password: "password".to_string(),
+            };
+
+            user_service.create(request).unwrap();
         }
     };
 }

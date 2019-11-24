@@ -1,7 +1,9 @@
 use services::folder::FolderService;
 use crate::entities::models::Folder;
-use diesel::result::Error;
 use crate::entities::builders::{ Builder, FolderBuilder };
+use crate::services::folder::CreateRequest;
+use crate::services::folder::UpdateRequest;
+use crate::services::error::ServiceError;
 
 pub struct FolderServiceMock;
 
@@ -12,7 +14,7 @@ impl FolderServiceMock {
 }
 
 impl FolderService for FolderServiceMock {
-    fn all(&self, user_id: i32) -> Result<Vec<Folder>, Error> {
+    fn all(&self, user_id: i32) -> Result<Vec<Folder>, ServiceError> {
         let folders = vec![
             factory!(Folder, user_id, None),
             factory!(Folder, user_id, None),
@@ -24,7 +26,7 @@ impl FolderService for FolderServiceMock {
         Ok(folders)
     }
 
-    fn find(&self, folder_id: i32) -> Result<Folder, Error> {
+    fn find(&self, folder_id: i32) -> Result<Folder, ServiceError> {
         let mut folder = factory!(Folder, 1, None);
 
         folder.set_id(folder_id);
@@ -32,35 +34,24 @@ impl FolderService for FolderServiceMock {
         Ok(folder)
     }
 
-    fn create(
-        &self,
-        name: String,
-        user_id: i32,
-        parent_id: Option<i32>
-    ) -> Result<Folder, Error> {
-        let mut folder = factory!(Folder, user_id, parent_id);
+    fn create(&self, request: CreateRequest) -> Result<Folder, ServiceError> {
+        let mut folder = factory!(Folder, request.user_id, request.parent_id);
 
-        folder.set_name(name);
+        folder.set_name(request.name);
 
         Ok(folder)
     }
 
-    fn update(
-        &self,
-        id: i32,
-        name: String,
-        user_id: i32,
-        parent_id: Option<i32>
-    ) -> Result<Folder, Error> {
-        let mut folder = factory!(Folder, user_id, parent_id);
+    fn update(&self, request: UpdateRequest) -> Result<Folder, ServiceError> {
+        let mut folder = factory!(Folder, request.user_id, request.parent_id);
 
-        folder.set_id(id);
-        folder.set_name(name);
+        folder.set_id(request.id);
+        folder.set_name(request.name);
 
         Ok(folder)
     }
 
-    fn delete(&self, id: i32) -> Result<Folder, Error> {
+    fn delete(&self, id: i32) -> Result<Folder, ServiceError> {
         let mut folder = factory!(Folder, 1, None);
 
         folder.set_id(id);

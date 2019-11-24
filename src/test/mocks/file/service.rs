@@ -2,6 +2,8 @@ use crate::services::file::FileService;
 use crate::entities::models::File;
 use crate::services::error::ServiceError;
 use crate::entities::builders::{Builder, FileBuilder};
+use crate::services::file::CreateRequest;
+use crate::services::file::UpdateRequest;
 
 pub struct FileServiceMock;
 
@@ -32,40 +34,25 @@ impl FileService for FileServiceMock {
         Ok(file)
     }
 
-    fn create(
-        &self,
-        name: String,
-        file_name: String,
-        extension: String,
-        folder_id: i32,
-        public: bool,
-    ) -> Result<File, ServiceError> {
-        let mut file = factory!(File, folder_id);
+    fn create(&self, request: CreateRequest) -> Result<File, ServiceError> {
+        let mut file = factory!(File, request.folder_id);
 
-        file.set_name(name);
-        file.set_file_name(file_name);
-        file.set_extension(extension);
-        file.set_public(public);
+        file.set_name(request.name);
+        file.set_file_name(request.file_name);
+        file.set_extension(request.extension);
+        file.set_public(request.public);
 
         Ok(file)
     }
 
-    fn update(
-        &self,
-        id: i32,
-        name: String,
-        file_name: String,
-        extension: String,
-        folder_id: i32,
-        public: bool,
-    ) -> Result<File, ServiceError> {
-        let mut file = factory!(File, folder_id);
+    fn update(&self, request: UpdateRequest) -> Result<File, ServiceError> {
+        let mut file = factory!(File, request.folder_id);
 
-        file.set_id(id);
-        file.set_name(name);
-        file.set_file_name(file_name);
-        file.set_extension(extension);
-        file.set_public(public);
+        file.set_id(request.id);
+        file.set_name(request.name);
+        file.set_file_name(request.file_name);
+        file.set_extension(request.extension);
+        file.set_public(request.public);
 
         Ok(file)
     }

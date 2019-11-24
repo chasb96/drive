@@ -1,20 +1,28 @@
 pub mod implementation;
 
+use services::error::ServiceError;
 use entities::models::User;
-use diesel::result::Error;
+
+pub struct CreateRequest {
+    pub name: String,
+    pub email: String,
+    pub role: String,
+    pub password: String,
+}
+
+pub struct UpdateRequest {
+    pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub role: String,
+}
 
 pub trait UserService {
-    fn create(
-        &self,
-        name: String,
-        email: String,
-        role: String,
-        password: String,
-    ) -> Result<User, Error>;
+    fn create(&self, request: CreateRequest) -> Result<User, ServiceError>;
 
-    fn update(&self, id: i32, name: String, email: String, role: String) -> Result<User, Error>;
+    fn update(&self, request: UpdateRequest) -> Result<User, ServiceError>;
 
-    fn delete(&self, id: i32) -> Result<User, Error>;
+    fn delete(&self, id: i32) -> Result<User, ServiceError>;
 
-    fn update_password(&self, id: i32, password: String) -> Result<User, Error>;
+    fn update_password(&self, id: i32, password: String) -> Result<User, ServiceError>;
 }

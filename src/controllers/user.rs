@@ -1,3 +1,5 @@
+use services::user::CreateRequest;
+use services::user::UpdateRequest;
 use super::ControllerError as Error;
 use entities::models::User;
 use entities::diesel::DbFacade;
@@ -65,7 +67,14 @@ impl UserController {
             return Err(Error::Forbidden);
         }
 
-        match user_service.create(name, email, role, password) {
+        let request = CreateRequest {
+            name,
+            email,
+            role,
+            password
+        };
+
+        match user_service.create(request) {
             Ok(user) => Ok(user),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
@@ -117,7 +126,14 @@ impl UserController {
             return Err(Error::Forbidden);
         }
 
-        match user_service.update(user_id, name, email, role) {
+        let request = UpdateRequest {
+            id: user_id,
+            name,
+            email,
+            role
+        };
+
+        match user_service.update(request) {
             Ok(user) => Ok(user),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);

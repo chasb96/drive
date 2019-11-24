@@ -1,22 +1,29 @@
 pub mod implementation;
 
 use entities::models::Folder;
-use diesel::result::Error;
+use crate::services::error::ServiceError;
+
+pub struct CreateRequest {
+    pub name: String,
+    pub user_id: i32,
+    pub parent_id: Option<i32>,
+}
+
+pub struct UpdateRequest {
+    pub id: i32,
+    pub name: String,
+    pub user_id: i32,
+    pub parent_id: Option<i32>
+}
 
 pub trait FolderService {
-    fn all(&self, user_id: i32) -> Result<Vec<Folder>, Error>;
+    fn all(&self, user_id: i32) -> Result<Vec<Folder>, ServiceError>;
 
-    fn find(&self, folder_id: i32) -> Result<Folder, Error>;
+    fn find(&self, folder_id: i32) -> Result<Folder, ServiceError>;
 
-    fn create(&self, name: String, user_id: i32, parent_id: Option<i32>) -> Result<Folder, Error>;
+    fn create(&self, request: CreateRequest) -> Result<Folder, ServiceError>;
 
-    fn update(
-        &self,
-        id: i32,
-        name: String,
-        user_id: i32,
-        parent_id: Option<i32>,
-    ) -> Result<Folder, Error>;
+    fn update(&self, request: UpdateRequest) -> Result<Folder, ServiceError>;
 
-    fn delete(&self, id: i32) -> Result<Folder, Error>;
+    fn delete(&self, id: i32) -> Result<Folder, ServiceError>;
 }

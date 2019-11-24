@@ -3,6 +3,8 @@ use entities::builders::{Builder, FileBuilder};
 use entities::models::File;
 use services::error::ServiceError;
 use super::FileService;
+use crate::services::file::CreateRequest;
+use crate::services::file::UpdateRequest;
 
 pub struct Service<T: FileStore> {
     file_store: T
@@ -29,45 +31,39 @@ impl<T: FileStore> FileService for Service<T> {
         }
     }
 
-    fn create(
-        &self,
-        name: String,
-        extension: String,
-        file_name: String,
-        folder_id: i32,
-        public: bool,
-    ) -> Result<File, ServiceError> {
+    fn create(&self, request: CreateRequest) -> Result<File, ServiceError> {
+        // Create the File with the
+        //  name, extension, internal name, public, and folder_id
         let file = FileBuilder::new()
-            .with_name(name)
-            .with_extension(extension)
-            .with_file_name(file_name)
-            .with_public(public)
-            .with_folder_id(folder_id)
+            .with_name(request.name)
+            .with_extension(request.extension)
+            .with_file_name(request.file_name)
+            .with_public(request.public)
+            .with_folder_id(request.folder_id)
             .build();
 
+        // Request that the DataStore save the File
         match self.file_store.save(&file) {
             Ok(file) => Ok(file),
             Err(e) => Err(ServiceError::from(e))
         }
     }
 
-    fn update(
-        &self,
-        id: i32,
-        name: String,
-        file_name: String,
-        extension: String,
-        folder_id: i32,
-        public: bool,
-    ) -> Result<File, ServiceError> {
-        let mut file = self.file_store.find_by_file_id(id)?;
+    fn update(&self, request: UpdateRequest) -> Result<File, ServiceError> {
+        // Attempt to retrieve the File from the DataStore
+        //  by the file's Id, if theres an error, throw it back
+        let mut file = self.file_store.find_by_file_id(request.id)?;
 
-        file.set_name(name);
-        file.set_file_name(file_name);
-        file.set_extension(extension);
-        file.set_folder_id(folder_id);
-        file.set_public(public);
+        // Update the name, internal name,
+        //  extension, folder_id and public
+        //  of the File
+        file.set_name(request.name);
+        file.set_file_name(request.file_name);
+        file.set_extension(request.extension);
+        file.set_folder_id(request.folder_id);
+        file.set_public(request.public);
 
+        // Request the DataStore update the file record
         match self.file_store.update(&file) {
             Ok(file) => Ok(file),
             Err(e) => Err(ServiceError::from(e))
@@ -75,6 +71,9 @@ impl<T: FileStore> FileService for Service<T> {
     }
 
     fn delete(&self, id: i32) -> Result<File, ServiceError> {
+        // Attempt to get the File from the DataStore
+        //  by its File Id, if there's an error, throw it
+        //  back
         let file = self.file_store.find_by_file_id(id)?;
 
         match self.file_store.delete(&file) {
@@ -90,6 +89,8 @@ mod tests {
     use crate::test::mocks::file::store::FileStoreMock;
     use crate::services::FileService;
     use crate::entities::builders::{ Builder, FileBuilder };
+    use super::CreateRequest;
+    use super::UpdateRequest;
 
     #[test]
     fn test_create() {
@@ -98,14 +99,15 @@ mod tests {
 
         let expected = factory!(File, 1);
 
-        let actual = file_service.create(
-            expected.name().to_string(),
-            expected.extension().to_string(),
-            expected.file_name().to_string(),
-            expected.folder_id(),
-            expected.public(),
-        )
-        .unwrap();
+        let request = CreateRequest {
+            name: expected.name().to_string(),
+            extension: expected.extension().to_string(),
+            file_name: expected.file_name().to_string(),
+            folder_id: expected.folder_id(),
+            public: expected.public(),
+        };
+
+        let actual = file_service.create(request).unwrap();
 
         assert_eq!(expected.name(), actual.name());
         assert_eq!(expected.extension(), actual.extension());
@@ -121,15 +123,16 @@ mod tests {
 
         let expected = factory!(File, 1);
 
-        let actual = file_service.update(
-            expected.id(),
-            expected.name().to_string(),
-            expected.file_name().to_string(),
-            expected.extension().to_string(),
-            expected.folder_id(),
-            expected.public(),
-        )
-        .unwrap();
+        let request = UpdateRequest {
+            id: expected.id(),
+            name: expected.name().to_string(),
+            file_name: expected.file_name().to_string(),
+            extension: expected.extension().to_string(),
+            folder_id: expected.folder_id(),
+            public: expected.public(),
+        };
+
+        let actual = file_service.update(request).unwrap();
 
         assert_eq!(expected, actual);
     }
