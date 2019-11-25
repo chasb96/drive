@@ -22,7 +22,10 @@ macro_rules! resolve {
     };
 
     (FileController) => {
-        crate::controllers::FileController::new(resolve!(FileService))
+        crate::controllers::file::implementation::Controller::new(
+            resolve!(FileService),
+            resolve!(StorageService),
+        )
     };
 
     (FolderController) => {

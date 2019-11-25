@@ -7,6 +7,7 @@ use rocket::response::{Responder, Stream};
 use rocket_contrib::templates::Template;
 use serde_derive::Serialize;
 use web::state::State;
+use crate::controllers::file::FileController;
 
 #[derive(Serialize)]
 pub struct FileContext {

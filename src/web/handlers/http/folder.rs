@@ -9,6 +9,7 @@ use serde_derive::Serialize;
 use web::guards::auth::Auth;
 use web::state::State;
 use web::success::Success;
+use crate::controllers::file::FileController;
 
 #[get("/folders")]
 pub fn index(_auth: Auth) -> impl Responder<'static> {

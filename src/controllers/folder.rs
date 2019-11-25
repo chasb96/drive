@@ -1,4 +1,4 @@
-use super::ControllerError as Error;
+use super::error::ControllerError as Error;
 use entities::models::{Folder, User};
 use policies::Restricted;
 use services::FolderService;

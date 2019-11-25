@@ -6,6 +6,7 @@ use rocket_contrib::templates::Template;
 use serde_derive::Serialize;
 use web::guards::auth::Auth;
 use web::state::State;
+use crate::controllers::file::FileController;
 
 #[derive(Serialize)]
 struct HomeContext {

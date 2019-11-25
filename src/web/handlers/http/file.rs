@@ -1,4 +1,5 @@
-use controllers::file::StoreRequest;
+use controllers::file::CreateRequest;
+use controllers::file::UpdateRequest;
 use entities::models::{File, Folder, User};
 use env::Env;
 use rocket::data::Data;
@@ -17,6 +18,7 @@ use std::fs;
 use web::guards::auth::Auth;
 use web::state::State;
 use web::success::Success;
+use crate::controllers::file::FileController;
 
 #[get("/folders/<folder_id>/files")]
 pub fn index(_auth: Auth, folder_id: i32) -> impl Responder<'static> {
@@ -138,8 +140,7 @@ pub fn store(
 
     let mut parts = name.splitn(2, '.');
 
-    let store_request = StoreRequest {
-        user: user.clone(),
+    let store_request = CreateRequest {
         name: parts.nth(0).unwrap_or("").to_string(),
         extension: parts.nth(0).unwrap_or("").to_string(),
         user_id: user.id(),
@@ -148,7 +149,7 @@ pub fn store(
         input: file,
     };
 
-    let stored = match file_controller.store(store_request) {
+    let stored = match file_controller.store(user.clone(), store_request) {
         Ok(file) => file,
         Err(e) => {
             log!(
@@ -235,14 +236,15 @@ pub fn update(
     let file_controller = resolve!(FileController);
     let user = auth.user();
 
-    match file_controller.update(
-        user,
+    let request = UpdateRequest {
         file_id,
-        payload.name.to_owned(),
-        payload.extension.to_owned(),
-        payload.public,
-        payload.folder_id,
-    ) {
+        name: payload.name.to_owned(),
+        extension: payload.extension.to_owned(),
+        public: payload.public,
+        folder_id: payload.folder_id
+    };
+
+    match file_controller.update(user, request) {
         Ok(file) => Ok(Redirect::to(format!(
             "/folders/{}/files/{}",
             file.folder_id(),

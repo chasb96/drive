@@ -1,6 +1,6 @@
 use services::user::CreateRequest;
 use services::user::UpdateRequest;
-use super::ControllerError as Error;
+use super::error::ControllerError as Error;
 use entities::models::User;
 use entities::diesel::DbFacade;
 use diesel::result;
