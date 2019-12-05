@@ -12,6 +12,18 @@ impl UserStoreMock {
 }
 
 impl UserStore for UserStoreMock {
+    fn all(&self) -> Result<Vec<User>, DataStoreError> {
+        let users = vec![
+            factory!(User),
+            factory!(User),
+            factory!(User),
+            factory!(User),
+            factory!(User)
+        ];
+
+        Ok(users)
+    }
+
     fn find_by_user_id(&self, user_id: i32) -> Result<User, DataStoreError> {
         let mut user = factory!(User);
 

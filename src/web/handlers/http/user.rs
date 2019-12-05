@@ -1,3 +1,5 @@
+use controllers::user::UpdateRequest;
+use controllers::user::StoreRequest;
 use entities::models::User;
 use rocket::http::Status;
 use rocket::request::Form;
@@ -8,6 +10,7 @@ use rocket_contrib::templates::Template;
 use serde_derive::Serialize;
 use web::guards::auth::Auth;
 use web::state::State;
+use controllers::UserController;
 
 #[derive(Serialize)]
 pub struct IndexContext {
@@ -17,9 +20,10 @@ pub struct IndexContext {
 
 #[get("/users")]
 pub fn index(auth: Auth, state: State) -> impl Responder<'static> {
+    let user_controller = resolve!(UserController);
     let user = auth.user();
 
-    let users = match <resolve!(UserController)>::index(user.clone()) {
+    let users = match user_controller.index(user.clone()) {
         Ok(users) => users,
         Err(e) => {
             log!(
@@ -45,9 +49,10 @@ pub struct ShowContext {
 
 #[get("/users/<user_id>")]
 pub fn show(auth: Auth, state: State, user_id: i32) -> impl Responder<'static> {
+    let user_controller = resolve!(UserController);
     let user = auth.user();
 
-    let show = match <resolve!(UserController)>::show(user.clone(), user_id) {
+    let show = match user_controller.show(user.clone(), user_id) {
         Ok(user) => user,
         Err(e) => {
             log!(
@@ -72,9 +77,10 @@ pub struct CreateContext {
 
 #[get("/users/create")]
 pub fn create(auth: Auth, state: State) -> impl Responder<'static> {
+    let user_controller = resolve!(UserController);
     let user = auth.user();
 
-    if let Err(e) = <resolve!(UserController)>::create(user.clone()) {
+    if let Err(e) = user_controller.create(user.clone()) {
         return Err(Status::from(e));
     }
 
@@ -92,15 +98,17 @@ pub struct StorePayload {
 
 #[post("/users", data = "<payload>")]
 pub fn store(auth: Auth, payload: Form<StorePayload>) -> impl Responder<'static> {
+    let user_controller = resolve!(UserController);
     let user = auth.user();
 
-    let user = match <resolve!(UserController)>::store(
-        user.clone(),
-        payload.name.clone(),
-        payload.email.clone(),
-        "guest".to_string(),
-        payload.password.clone(),
-    ) {
+    let store_request = StoreRequest {
+        name: payload.name.clone(),
+        email: payload.email.clone(),
+        role: "guest".to_string(),
+        password: payload.password.clone()
+    };
+
+    let user = match user_controller.store(user.clone(), store_request) {
         Ok(user) => user,
         Err(e) => {
             log!(
@@ -124,9 +132,10 @@ pub struct EditContext {
 
 #[get("/users/<user_id>/edit")]
 pub fn edit(auth: Auth, state: State, user_id: i32) -> impl Responder<'static> {
+    let user_controller = resolve!(UserController);
     let user = auth.user();
 
-    let edit = match <resolve!(UserController)>::edit(user.clone(), user_id) {
+    let edit = match user_controller.edit(user.clone(), user_id) {
         Ok(edit) => edit,
         Err(e) => {
             log!(
@@ -153,19 +162,21 @@ pub struct UpdatePayload {
 
 #[post("/users/<user_id>", data = "<payload>")]
 pub fn update(auth: Auth, user_id: i32, payload: Form<UpdatePayload>) -> impl Responder<'static> {
+    let user_controller = resolve!(UserController);
     let user = auth.user();
 
     if !user.password_check(&payload.password) {
         return Err(Status::Forbidden);
     }
 
-    match <resolve!(UserController)>::update(
-        user.clone(),
+    let update_request = UpdateRequest {
         user_id,
-        payload.name.clone(),
-        payload.email.clone(),
-        user.role().to_string(),
-    ) {
+        name: payload.name.clone(),
+        email: payload.email.clone(),
+        role: user.role().to_string()
+    };
+
+    match user_controller.update(user, update_request) {
         Ok(user) => Ok(Redirect::to(format!("/users/{}", user.id()))),
         Err(e) => Err(Status::from(e)),
     }
@@ -173,9 +184,10 @@ pub fn update(auth: Auth, user_id: i32, payload: Form<UpdatePayload>) -> impl Re
 
 #[post("/users/<user_id>/delete")]
 pub fn delete(auth: Auth, user_id: i32) -> impl Responder<'static> {
+    let user_controller = resolve!(UserController);
     let user = auth.user();
 
-    match <resolve!(UserController)>::delete(user, user_id) {
+    match user_controller.delete(user, user_id) {
         Ok(_) => Ok(Redirect::to("/users")),
         Err(e) => Err(Status::from(e)),
     }
@@ -193,13 +205,14 @@ pub fn update_password(
     user_id: i32,
     payload: Form<UpdatePasswordPayload>,
 ) -> impl Responder<'static> {
+    let user_controller = resolve!(UserController);
     let user = auth.user();
 
     if !user.password_check(&payload.old_password) {
         return Err(Status::Forbidden);
     }
 
-    match <resolve!(UserController)>::update_password(user, user_id, payload.password.to_string()) {
+    match user_controller.update_password(user, user_id, payload.password.to_string()) {
         Ok(user) => Ok(Redirect::to(format!("/users/{}", user.id()))),
         Err(e) => Err(Status::from(e)),
     }

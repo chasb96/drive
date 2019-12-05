@@ -185,6 +185,9 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
     }
 
     fn delete(&self, user: User, file_id: i32) -> Result<File, Error> {
+        // Attempt to find the file by its Id
+        // If it's not found, return a not found,
+        //  in case of error, throw back an InternalServerError
         let found: File = match self.file_service.find(file_id) {
             Ok(file) => file,
             Err(ServiceError::NotFound) => return Err(Error::NotFound),
@@ -194,20 +197,20 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
             }
         };
 
+        // If the user is not allowed to access this file,
+        //  we don't to show that the behavior exists
         if !user.can_delete(found.clone()) {
-            log!(
-                "info",
-                "403 Forbidden. Deletion not allowed for user {}",
-                user.id()
-            );
-            return Err(Error::Forbidden);
+            return Err(Error::NotFound);
         }
 
+        // Attempt to delete the file from storage
+        //  on failure, give back an internal server error
         if self.storage_service.delete(user.id().to_string(), found.file_name().to_string()).is_err()
         {
             return Err(Error::InternalServerError);
         }
 
+        // Delete the file from the DataStore
         match self.file_service.delete(file_id) {
             Ok(file) => Ok(file),
             Err(e) => {
@@ -218,6 +221,9 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
     }
 
     fn contents(&self, user: User, file_id: i32) -> Result<fs::File, Error> {
+        // Attempt to find the file by its Id
+        // On NotFound, give a NotFound,
+        // On error, mask the error as an InternalServerError
         let found: File = match self.file_service.find(file_id) {
             Ok(file) => file,
             Err(ServiceError::NotFound) => return Err(Error::NotFound),
@@ -227,19 +233,20 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
             }
         };
 
-        let owner: i32 = match found.folder() {
-            Ok(folder) => folder.user_id(),
-            Err(e) => {
-                log!("error", "500 Internal Server Erro: {}", e);
-                return Err(Error::InternalServerError);
-            }
-        };
-
+        // If the user cannot view this file,
+        //  mask it behind a NotFound
         if !user.can_view(found.clone()) {
-            return Err(Error::Forbidden);
+            return Err(Error::NotFound);
         }
 
-        match self.storage_service.read(owner.to_string(), found.file_name().to_string()) {
+        // This is less obvious than it looks:
+        // There's no guarantee here that the file technically
+        //  corresponds to this User, other than the above assertions
+        // But, if the above fails, it'll still only try to yield
+        //  something of their ownership.
+        // This is an impossible case, so we just return a 500 here
+        //  on error
+        match self.storage_service.read(user.id().to_string(), found.file_name().to_string()) {
             Ok(contents) => Ok(contents),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);

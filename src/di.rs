@@ -33,7 +33,9 @@ macro_rules! resolve {
     };
 
     (UserController) => {
-        crate::controllers::UserController
+        crate::controllers::user::implementation::Controller::new(
+            resolve!(UserService)
+        )
     };
 
     (UserStore) => {

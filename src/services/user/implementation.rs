@@ -25,6 +25,20 @@ impl<T: UserStore, S: FolderService> Service<T, S> {
 }
 
 impl<T: UserStore, S: FolderService> UserService for Service<T, S> {
+    fn all(&self) -> Result<Vec<User>, ServiceError> {
+        match self.user_store.all() {
+            Ok(user) => Ok(user),
+            Err(e) => Err(ServiceError::from(e))
+        }
+    }
+
+    fn find_by_user_id(&self, user_id: i32) -> Result<User, ServiceError> {
+        match self.user_store.find_by_user_id(user_id) {
+            Ok(user) => Ok(user),
+            Err(e) => Err(ServiceError::from(e))
+        }
+    }
+
     fn create(&self, request: CreateRequest) -> Result<User, ServiceError> {
         // Passwords are hashed - we don't want passwords to be
         //  visible if the database was ever cracked

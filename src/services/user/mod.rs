@@ -18,6 +18,10 @@ pub struct UpdateRequest {
 }
 
 pub trait UserService {
+    fn all(&self) -> Result<Vec<User>, ServiceError>;
+
+    fn find_by_user_id(&self, user_id: i32) -> Result<User, ServiceError>;
+
     fn create(&self, request: CreateRequest) -> Result<User, ServiceError>;
 
     fn update(&self, request: UpdateRequest) -> Result<User, ServiceError>;

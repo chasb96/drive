@@ -17,6 +17,13 @@ impl Store {
 }
 
 impl UserStore for Store {
+    fn all(&self) -> Result<Vec<User>, DataStoreError> {
+        let users = User::all()
+            .load::<User>(&DbFacade::connection())?;
+
+        Ok(users)
+    }
+
     fn find_by_user_id(&self, id: i32) -> Result<User, DataStoreError> {
         let user = User::all()
             .filter(users::id.eq(id))

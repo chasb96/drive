@@ -3,6 +3,8 @@ use crate::entities::error::DataStoreError;
 use entities::models::User;
 
 pub trait UserStore {
+    fn all(&self) -> Result<Vec<User>, DataStoreError>;
+
     fn find_by_user_id(&self, id: i32) -> Result<User, DataStoreError>;
 
     fn save(&self, user: &User) -> Result<User, DataStoreError>;
