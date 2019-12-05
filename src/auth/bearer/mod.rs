@@ -5,7 +5,7 @@ pub use self::error::Error;
 
 use super::authenticate::Authenticate;
 use env::Env;
-use frank_jwt::{decode, encode, Algorithm};
+use frank_jwt::{decode, encode, Algorithm, ValidationOptions};
 use serde::ser::Serialize;
 use serde_json::json;
 use serde_json::Map;
@@ -35,7 +35,7 @@ pub trait Bearer: Sized + Serialize {
     fn decode(token: &str) -> Result<Value, Error> {
         let secret = Env::app_key();
 
-        match decode(token, &secret, Algorithm::HS384) {
+        match decode(token, &secret, Algorithm::HS384, &ValidationOptions::default()) {
             Ok((_, payload)) => Ok(payload),
             Err(e) => Err(Error::from(e)),
         }
