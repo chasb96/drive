@@ -1,3 +1,5 @@
+![Build Status](https://travis-ci.org/chasb96/drive.svg?branch=master)
+
 # Project
 
 A simple storage system plus more for personal use.
@@ -41,7 +43,7 @@ As well, this project only works on `nightly` builds. If dependencies fail to bu
 
     - `TEST_DATABASE_URL`: Required if running tests, `string`. Connection string to your testing database.
 
-- Logging
+- Logging!
     - `LOG_LEVEL`: Optional, `string`. Minimum level at which logging should occur. Default is `error`.
 
 - Storage
