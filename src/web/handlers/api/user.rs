@@ -1,16 +1,20 @@
-use db::presentation::ToJson;
+use controllers::user::StoreRequest;
+use controllers::user::UpdateRequest;
+use entities::presentation::ToJson;
 use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::{get, post};
 use rocket_contrib::json::Json;
 use serde_derive::Deserialize;
 use web::guards::auth::Auth;
+use controllers::UserController;
 
 #[get("/users")]
 pub fn index(auth: Auth) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user_controller = resolve!(UserController);
+    let user = auth.user();
 
-    let users = match <resolve!(UserController)>::index(user.clone()) {
+    let users = match user_controller.index(user.clone()) {
         Ok(users) => users,
         Err(e) => {
             log!(
@@ -28,9 +32,10 @@ pub fn index(auth: Auth) -> impl Responder<'static> {
 
 #[get("/users/<user_id>")]
 pub fn show(auth: Auth, user_id: i32) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user_controller = resolve!(UserController);
+    let user = auth.user();
 
-    let show = match <resolve!(UserController)>::show(user.clone(), user_id) {
+    let show = match user_controller.show(user.clone(), user_id) {
         Ok(user) => user,
         Err(e) => {
             log!(
@@ -55,15 +60,17 @@ pub struct StorePayload {
 
 #[post("/users", data = "<payload>")]
 pub fn store(auth: Auth, payload: Json<StorePayload>) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user_controller = resolve!(UserController);
+    let user = auth.user();
 
-    match <resolve!(UserController)>::store(
-        user.clone(),
-        payload.name.clone(),
-        payload.email.clone(),
-        "guest".to_string(),
-        payload.password.clone(),
-    ) {
+    let store_request = StoreRequest {
+        name: payload.name.clone(),
+        email: payload.email.clone(),
+        role: "guest".to_string(),
+        password: payload.password.clone()
+    };
+
+    match user_controller.store(user.clone(), store_request) {
         Ok(_) => {}
         Err(e) => {
             log!(
@@ -88,19 +95,21 @@ pub struct UpdatePayload {
 
 #[post("/users/<user_id>", data = "<payload>")]
 pub fn update(auth: Auth, user_id: i32, payload: Json<UpdatePayload>) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user_controller = resolve!(UserController);
+    let user = auth.user();
 
     if !user.password_check(&payload.password) {
         return Err(Status::Forbidden);
     }
 
-    match <resolve!(UserController)>::update(
-        user.clone(),
+    let update_request = UpdateRequest {
         user_id,
-        payload.name.clone(),
-        payload.email.clone(),
-        user.role().to_string(),
-    ) {
+        name: payload.name.clone(),
+        email: payload.email.clone(),
+        role: user.role().to_string()
+    };
+
+    match user_controller.update(user, update_request) {
         Ok(_) => Ok(Status::Ok),
         Err(e) => Err(Status::from(e)),
     }
@@ -108,9 +117,10 @@ pub fn update(auth: Auth, user_id: i32, payload: Json<UpdatePayload>) -> impl Re
 
 #[post("/users/<user_id>/delete")]
 pub fn delete(auth: Auth, user_id: i32) -> impl Responder<'static> {
-    let user = auth.clone().user();
+    let user_controller = resolve!(UserController);
+    let user = auth.user();
 
-    match <resolve!(UserController)>::delete(user, user_id) {
+    match user_controller.delete(user, user_id) {
         Ok(_) => Ok(Status::Ok),
         Err(e) => Err(Status::from(e)),
     }

@@ -1,159 +1,207 @@
 use bcrypt::hash;
-use db::builders::{Builder, UserBuilder};
-use db::models::User;
-use db::query::Query;
-use db::DbFacade;
-use diesel::result::Error;
-use diesel::ExpressionMethods;
-use diesel::QueryDsl;
-use diesel::RunQueryDsl;
+use entities::builders::{Builder, UserBuilder};
+use entities::models::User;
+use crate::services::error::ServiceError;
 use env::Env;
-use schema::*;
 use crate::services::UserService;
 use crate::services::FolderService;
-use crate::services::FileService;
+use entities::traits::user::UserStore;
+use crate::services::user::CreateRequest;
+use crate::services::user::UpdateRequest;
+use crate::services::folder::CreateRequest as FolderCreateRequest;
 
-pub struct Service;
+pub struct Service<T: UserStore, S: FolderService> {
+    user_store: T,
+    folder_service: S,
+}
 
-impl UserService for Service {
-    fn create(
-        name: String,
-        email: String,
-        role: String,
-        password: String,
-    ) -> Result<User, Error> {
-        let password_hash = hash(&password, Env::bcrypt_cost()).unwrap();
-
-        let user = UserBuilder::new()
-            .with_name(name)
-            .with_email(email)
-            .with_role(role)
-            .with_password(password_hash)
-            .build()
-            .save()?;
-
-        if let Err(e) = <resolve!(FolderService)>::create("/".to_string(), user.id(), None) {
-            log!(
-                "error",
-                "Failed to create root directory for user {}: {}",
-                user.id(),
-                e
-            );
-            // return Err(e);
+impl<T: UserStore, S: FolderService> Service<T, S> {
+    pub fn new(user_store: T, folder_service: S) -> Self {
+        Self {
+            user_store,
+            folder_service
         }
+    }
+}
+
+impl<T: UserStore, S: FolderService> UserService for Service<T, S> {
+    fn all(&self) -> Result<Vec<User>, ServiceError> {
+        match self.user_store.all() {
+            Ok(user) => Ok(user),
+            Err(e) => Err(ServiceError::from(e))
+        }
+    }
+
+    fn find_by_user_id(&self, user_id: i32) -> Result<User, ServiceError> {
+        match self.user_store.find_by_user_id(user_id) {
+            Ok(user) => Ok(user),
+            Err(e) => Err(ServiceError::from(e))
+        }
+    }
+
+    fn create(&self, request: CreateRequest) -> Result<User, ServiceError> {
+        // Passwords are hashed - we don't want passwords to be
+        //  visible if the database was ever cracked
+        // When creating a User, hash the password first
+        let password_hash = hash(&request.password, Env::bcrypt_cost()).unwrap();
+
+        // Create user, with their name, email, role, and password
+        let user = UserBuilder::new()
+            .with_name(request.name)
+            .with_email(request.email)
+            .with_role(request.role)
+            .with_password(password_hash)
+            .build();
+
+        // Store the User
+        // If the store fails, return back the error
+        self.user_store.save(&user)?;
+
+        let folder_create_request = FolderCreateRequest {
+            name: "/".to_string(),
+            user_id: user.id(),
+            parent_id: None
+        };
+
+        // If a user is successfully created,
+        //  create their root directory
+        // If creating the root directory fails, log it
+        self.folder_service.create(folder_create_request)?;
 
         Ok(user)
     }
 
-    fn update(id: i32, name: String, email: String, role: String) -> Result<User, Error> {
-        let mut user = User::all()
-            .filter(users::id.eq(id))
-            .first::<User>(&DbFacade::connection())?;
+    fn update(&self, request: UpdateRequest) -> Result<User, ServiceError> {
+        // Find the User by their id,
+        // If the operation fails (like NotFound), throw it back
+        let mut user = self.user_store.find_by_user_id(request.id)?;
 
-        user.set_name(name);
-        user.set_email(email);
-        user.set_role(role);
+        // Update the name, email, and role of the User
+        // We don't update their password, as it is sensitive
+        //  info; we want to separate the sensitive parts
+        user.set_name(request.name);
+        user.set_email(request.email);
+        user.set_role(request.role);
 
-        user.update()
+        // Update the user in the DataStore,
+        //  if there's an error, throw it back
+        let user = self.user_store.update(&user)?;
+
+        Ok(user)
     }
 
-    fn delete(id: i32) -> Result<User, Error> {
-        let file_service = resolve!(FileService);
-        let user = User::all()
-            .filter(users::id.eq(id))
-            .first::<User>(&DbFacade::connection())?;
+    fn delete(&self, id: i32) -> Result<User, ServiceError> {
+        // Locate the User by their Id,
+        // If finding the user fails, throw back the error
+        let user = self.user_store.find_by_user_id(id)?;
 
-        for folder in user.folders()? {
-            for file in folder.files()? {
-                if let Err(e) = file_service.delete(file.id()) {
-                    log!("error", "Failed to delete file {}: {}", file.id(), e);
-                    // return Err(e);
-                }
-            }
-
-            if let Err(e) = <resolve!(FolderService)>::delete(folder.id()) {
-                log!("error", "Failed to delete folder {}: {}", folder.id(), e);
-                return Err(e);
-            }
+        // Folders have a dependency on Users
+        // To be able to delete the User, their folders
+        //  must be deleted first
+        //
+        // Iterate through every Folder of the User
+        //  and delete it
+        //
+        // TODO: This is an N+1, should bulk delete
+        for folder in self.user_store.folders(&user)? {
+            self.folder_service.delete(folder.id())?;
         }
 
-        user.delete()
+        // Delete the User from the DataStore,
+        //  if there's an error, throw it back
+        let user = self.user_store.delete(&user)?;
+
+        Ok(user)
     }
 
-    fn update_password(id: i32, password: String) -> Result<User, Error> {
-        let mut user = User::all()
-            .filter(users::id.eq(id))
-            .first::<User>(&DbFacade::connection())?;
+    fn update_password(&self, id: i32, password: String) -> Result<User, ServiceError> {
+        // Locate the User by their Id,
+        //  if there's an error, throw it back
+        let mut user = self.user_store.find_by_user_id(id)?;
 
+        // Hash the User's new password,
+        //  as User's passwords are hashed for security
         let password_hash = hash(&password, Env::bcrypt_cost()).unwrap();
 
+        // Update the User entity with the hashed password
         user.set_password(password_hash);
 
-        user.update_password()
+        // Request that the DataStore side update the
+        //  user record
+        let user = self.user_store.update_password(&user)?;
+
+        Ok(user)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    // #[test]
-    // fn test_create() {
-    //     dotenv::dotenv().expect("Missing .env file");
-    //     let conn = DbFacade::connection();
-    //
-    //     let user = factory!(User);
-    //
-    //     let actual = Service::create(
-    //         user.name().to_string(),
-    //         user.email().to_string(),
-    //         "guest".to_string(),
-    //         user.password().to_string(),
-    //     )
-    //     .unwrap();
-    //
-    //     let root = Folder::all()
-    //         .filter(folders::user_id.eq(actual.id()))
-    //         .filter(folders::parent_id.is_null())
-    //         .first::<Folder>(&conn);
-    //
-    //     assert_eq!(user.name(), actual.name());
-    //     assert_eq!(user.email(), actual.email());
-    //     assert!(verify(user.password(), actual.password()).unwrap());
-    //     assert!(root.is_ok());
-    // }
-    //
-    // #[test]
-    // fn test_update() {
-    //     dotenv::dotenv().expect("Missing .env file");
-    //
-    //     let user = factory!(User).save().unwrap();
-    //
-    //     let expected = factory!(User);
-    //     let actual = Service::update(
-    //         user.id(),
-    //         expected.name().to_string(),
-    //         expected.email().to_string(),
-    //         "guest".to_string(),
-    //     )
-    //     .unwrap();
-    //
-    //     assert_eq!(user.id(), actual.id());
-    //     assert_eq!(expected.name(), actual.name());
-    //     assert_eq!(expected.email(), actual.email());
-    // }
-    //
-    // #[test]
-    // fn test_delete() {
-    //     dotenv::dotenv().expect("Missing .env file");
-    //     let conn = DbFacade::connection();
-    //
-    //     let expected = factory!(User).save().unwrap();
-    //     let actual = Service::delete(expected.id()).unwrap();
-    //
-    //     let lookup = User::all()
-    //         .filter(users::id.eq(actual.id()))
-    //         .first::<User>(&conn);
-    //
-    //     assert_eq!(expected, actual);
-    //     assert_eq!(lookup, Err(Error::NotFound));
-    // }
+    use super::Service;
+    use super::CreateRequest;
+    use super::UpdateRequest;
+    use crate::test::mocks::folder::service::FolderServiceMock;
+    use crate::test::mocks::user::store::UserStoreMock;
+    use crate::services::UserService;
+    use crate::entities::builders::{ Builder, UserBuilder };
+    use bcrypt::verify;
+
+    #[test]
+    fn test_create() {
+        let folder_service = FolderServiceMock::new();
+        let user_store = UserStoreMock::new();
+        let user_service = Service::new(user_store, folder_service);
+
+        let expected = factory!(User);
+
+        let request = CreateRequest {
+            name: expected.name().to_string(),
+            email: expected.email().to_string(),
+            role: expected.role().to_string(),
+            password: expected.password().to_string(),
+        };
+
+        let actual = user_service.create(request).unwrap();
+
+        assert_eq!(expected.name(), actual.name());
+        assert_eq!(expected.email(), actual.email());
+        assert!(verify(expected.password(), actual.password()).unwrap());
+    }
+
+    #[test]
+    fn test_update() {
+        let folder_service = FolderServiceMock::new();
+        let user_store = UserStoreMock::new();
+        let user_service = Service::new(user_store, folder_service);
+
+        let expected = factory!(User);
+
+        let request = UpdateRequest {
+            id: expected.id(),
+            name: expected.name().to_string(),
+            email: expected.email().to_string(),
+            role: expected.role().to_string(),
+        };
+
+        let actual = user_service.update(request).unwrap();
+
+        assert_eq!(expected.id(), actual.id());
+        assert_eq!(expected.name(), actual.name());
+        assert_eq!(expected.email(), actual.email());
+    }
+
+    #[test]
+    fn test_delete() {
+        let folder_service = FolderServiceMock::new();
+        let user_store = UserStoreMock::new();
+        let user_service = Service::new(user_store, folder_service);
+
+        let expected = factory!(User);
+
+        let actual = user_service.delete(
+            expected.id(),
+        )
+        .unwrap();
+
+        assert_eq!(expected.id(), actual.id());
+    }
 }

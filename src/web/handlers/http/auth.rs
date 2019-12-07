@@ -2,7 +2,7 @@ use auth::authenticate::Authenticate;
 use auth::basic::Credentials;
 use auth::bearer::Token;
 use auth::Auth;
-use db::models::User;
+use entities::models::User;
 use rocket::http::{Cookie, Cookies, Status};
 use rocket::request::Form;
 use rocket::response::{Redirect, Responder};

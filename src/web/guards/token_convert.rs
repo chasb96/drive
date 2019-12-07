@@ -14,8 +14,8 @@ impl Error for TokenError {}
 impl fmt::Display for TokenError {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match self {
-            TokenError::NotPresent => write!(f, "{}", "Token Not Present"),
-            TokenError::Invalid => write!(f, "{}", "Invalid Token"),
+            TokenError::NotPresent => write!(f, "Token Not Present"),
+            TokenError::Invalid => write!(f, "Invalid Token"),
         }
     }
 }
@@ -23,8 +23,8 @@ impl fmt::Display for TokenError {
 impl fmt::Debug for TokenError {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         match self {
-            TokenError::NotPresent => write!(f, "{}", "Token Not Present"),
-            TokenError::Invalid => write!(f, "{}", "Invalid Token"),
+            TokenError::NotPresent => write!(f, "Token Not Present"),
+            TokenError::Invalid => write!(f, "Invalid Token"),
         }
     }
 }

@@ -1,5 +1,5 @@
 use super::Restrict;
-use db::models::{File, User};
+use entities::models::{File, User};
 
 impl Restrict<User> for File {
     fn viewable_by(&self, user: &User) -> bool {

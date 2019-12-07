@@ -1,110 +1,150 @@
-use db::builders::{Builder, FolderBuilder};
-use db::models::Folder;
-use db::query::Query;
-use db::DbFacade;
-use diesel::result::Error;
-use diesel::ExpressionMethods;
-use diesel::QueryDsl;
-use diesel::RunQueryDsl;
-use schema::*;
+use services::file::FileService;
+use entities::traits::folder::FolderStore;
+use entities::builders::{Builder, FolderBuilder};
+use entities::models::Folder;
+use crate::services::error::ServiceError;
 use super::FolderService;
+use super::CreateRequest;
+use super::UpdateRequest;
 
-pub struct Service;
+pub struct Service<T: FolderStore, S: FileService> {
+    folder_store: T,
+    file_service: S,
+}
 
-impl FolderService for Service {
-    fn create(name: String, user_id: i32, parent_id: Option<i32>) -> Result<Folder, Error> {
+impl<T: FolderStore, S: FileService> Service<T, S> {
+    pub fn new(folder_store: T, file_service: S) -> Self {
+        Self {
+            folder_store,
+            file_service
+        }
+    }
+}
+
+impl<T: FolderStore, S: FileService> FolderService for Service<T, S> {
+    fn all(&self, user_id: i32) -> Result<Vec<Folder>, ServiceError> {
+        Ok(self.folder_store.find_by_user_id(user_id)?)
+    }
+
+    fn find(&self, folder_id: i32) -> Result<Folder, ServiceError> {
+        Ok(self.folder_store.find_by_folder_id(folder_id)?)
+    }
+
+    fn create(&self, request: CreateRequest) -> Result<Folder, ServiceError> {
+        // Create a Folder with the name, user_id, and parent_id
         let folder = FolderBuilder::new()
-            .with_name(name)
-            .with_user_id(user_id)
-            .with_parent_id(parent_id)
+            .with_name(request.name)
+            .with_user_id(request.user_id)
+            .with_parent_id(request.parent_id)
             .build();
 
-        folder.save()
+        // Request the DataStore store the Folder
+        let folder = self.folder_store.save(&folder)?;
+
+        Ok(folder)
     }
 
-    fn update(
-        id: i32,
-        name: String,
-        user_id: i32,
-        parent_id: Option<i32>,
-    ) -> Result<Folder, Error> {
-        let mut folder = Folder::all()
-            .filter(folders::id.eq(id))
-            .first::<Folder>(&DbFacade::connection())?;
+    fn update(&self, request: UpdateRequest) -> Result<Folder, ServiceError> {
+        // Attempt to get the Folder by Id,
+        //  if it fails, throw it back
+        let mut folder = self.folder_store.find_by_folder_id(request.id)?;
 
-        folder.set_name(name);
-        folder.set_user_id(user_id);
-        folder.set_parent_id(parent_id);
+        // Update the Folder's name, user_id, and parent_id
+        folder.set_name(request.name);
+        folder.set_user_id(request.user_id);
+        folder.set_parent_id(request.parent_id);
 
-        folder.update()
+        // Request the DataStore update the Folder
+        let folder = self.folder_store.update(&folder)?;
+
+        Ok(folder)
     }
 
-    fn delete(id: i32) -> Result<Folder, Error> {
-        let folder = Folder::all()
-            .filter(folders::id.eq(id))
-            .first::<Folder>(&DbFacade::connection())?;
+    fn delete(&self, id: i32) -> Result<Folder, ServiceError> {
+        // Find the Folder by the Id, if an error is thrown,
+        //  throw it back
+        let folder = self.folder_store.find_by_folder_id(id)?;
 
-        folder.delete()
+        // Files have a dependency on Folders,
+        //  a Folder can't be deleted without its files
+        //  being deleted
+        //
+        // Iterate through all the Folder's Files,
+        //  and delete them
+        //
+        // TODO: This is N+1, there should be a bulk delete
+        for file in self.folder_store.files(&folder)? {
+            self.file_service.delete(file.id())?;
+        }
+
+        // Request the DataStore delete the Folder
+        let folder = self.folder_store.delete(&folder)?;
+
+        Ok(folder)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    // #[test]
-    // fn test_create() {
-    //     dotenv::dotenv().expect("Missing .env file");
-    //
-    //     let user = factory!(User).save().unwrap();
-    //     let expected = factory!(Folder, user.id(), None);
-    //
-    //     let actual = Service::create(
-    //         expected.name().to_string(),
-    //         expected.user_id(),
-    //         *expected.parent_id(),
-    //     )
-    //     .unwrap();
-    //
-    //     assert_eq!(expected.name(), actual.name());
-    //     assert_eq!(expected.user_id(), actual.user_id());
-    //     assert_eq!(expected.parent_id(), actual.parent_id());
-    // }
-    //
-    // #[test]
-    // fn test_update() {
-    //     dotenv::dotenv().expect("Missing .env file");
-    //
-    //     let user = factory!(User).save().unwrap();
-    //     let folder = factory!(Folder, user.id(), None).save().unwrap();
-    //
-    //     let expected = factory!(Folder, user.id(), None);
-    //     let actual = Service::update(
-    //         folder.id(),
-    //         expected.name().to_string(),
-    //         expected.user_id(),
-    //         *expected.parent_id(),
-    //     )
-    //     .unwrap();
-    //
-    //     assert_eq!(folder.id(), actual.id());
-    //     assert_eq!(expected.name(), actual.name());
-    //     assert_eq!(expected.user_id(), actual.user_id());
-    //     assert_eq!(expected.parent_id(), actual.parent_id());
-    // }
-    //
-    // #[test]
-    // fn test_delete() {
-    //     dotenv::dotenv().expect("Missing .env file");
-    //     let conn = DbFacade::connection();
-    //
-    //     let user = factory!(User).save().unwrap();
-    //     let expected = factory!(Folder, user.id(), None).save().unwrap();
-    //     let actual = Service::delete(expected.id()).unwrap();
-    //
-    //     let lookup = Folder::all()
-    //         .filter(folders::id.eq(actual.id()))
-    //         .first::<Folder>(&conn);
-    //
-    //     assert_eq!(expected, actual);
-    //     assert_eq!(lookup, Err(Error::NotFound));
-    // }
+    use super::Service;
+    use crate::test::mocks::file::service::FileServiceMock;
+    use crate::test::mocks::folder::store::FolderStoreMock;
+    use crate::services::FolderService;
+    use crate::entities::builders::{ Builder, FolderBuilder };
+    use super::CreateRequest;
+    use super::UpdateRequest;
+
+    #[test]
+    fn test_create() {
+        let folder_store = FolderStoreMock::new();
+        let file_service = FileServiceMock::new();
+        let folder_service = Service::new(folder_store, file_service);
+
+        let expected = factory!(Folder, 1, None);
+
+        let request = CreateRequest {
+            name: expected.name().to_string(),
+            user_id: expected.user_id(),
+            parent_id: *expected.parent_id(),
+        };
+
+        let actual = folder_service.create(request).unwrap();
+
+        assert_eq!(expected.name(), actual.name());
+        assert_eq!(expected.user_id(), actual.user_id());
+        assert_eq!(expected.parent_id(), actual.parent_id());
+    }
+
+    #[test]
+    fn test_update() {
+        let folder_store = FolderStoreMock::new();
+        let file_service = FileServiceMock::new();
+        let folder_service = Service::new(folder_store, file_service);
+
+        let expected = factory!(Folder, 1, None);
+
+        let request = UpdateRequest {
+            id: expected.id(),
+            name: expected.name().to_string(),
+            user_id: expected.user_id(),
+            parent_id: *expected.parent_id(),
+        };
+
+        let actual = folder_service.update(request).unwrap();
+
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_delete() {
+        let folder_store = FolderStoreMock::new();
+        let file_service = FileServiceMock::new();
+        let folder_service = Service::new(folder_store, file_service);
+
+        let expected = factory!(Folder, 1, None);
+
+        let actual = folder_service.delete(expected.id()).unwrap();
+
+        assert_eq!(expected.id(), actual.id());
+    }
 }

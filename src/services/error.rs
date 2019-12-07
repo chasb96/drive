@@ -1,14 +1,11 @@
 use std::{fmt, error};
-use diesel::result::Error;
+use crate::entities::error::DataStoreError;
+use crate::storage_drivers::storage_router::StorageRouterError;
 
-#[derive(Clone)]
 pub enum ServiceError {
-    InvalidConnectionString,
-    DatabaseError,
     NotFound,
-    QueryBuilderError,
-    SerializationError,
-    AlreadyInTransaction,
+    DataStoreError(DataStoreError),
+    StorageError(StorageRouterError),
 }
 
 impl error::Error for ServiceError {}
@@ -16,12 +13,9 @@ impl error::Error for ServiceError {}
 impl fmt::Debug for ServiceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ServiceError::InvalidConnectionString => write!(f, "{}", "Invalid Connection String"),
-            ServiceError::DatabaseError => write!(f, "{}", "DatabaseError"),
-            ServiceError::NotFound => write!(f, "{}", "Not Found"),
-            ServiceError::QueryBuilderError => write!(f, "{}", "Query Builder Error"),
-            ServiceError::SerializationError => write!(f, "{}", "Serialization Error"),
-            ServiceError::AlreadyInTransaction => write!(f, "{}", "Already In Transaction"),
+            ServiceError::NotFound => write!(f, "Not Found"),
+            ServiceError::DataStoreError(e) => e.fmt(f),
+            ServiceError::StorageError(e) => e.fmt(f),
         }
     }
 }
@@ -29,26 +23,25 @@ impl fmt::Debug for ServiceError {
 impl fmt::Display for ServiceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ServiceError::InvalidConnectionString => write!(f, "{}", "Invalid Connection String"),
-            ServiceError::DatabaseError => write!(f, "{}", "DatabaseError"),
-            ServiceError::NotFound => write!(f, "{}", "Not Found"),
-            ServiceError::QueryBuilderError => write!(f, "{}", "Query Builder Error"),
-            ServiceError::SerializationError => write!(f, "{}", "Serialization Error"),
-            ServiceError::AlreadyInTransaction => write!(f, "{}", "Already In Transaction"),
+            ServiceError::NotFound => write!(f, "Not Found"),
+            ServiceError::DataStoreError(e) => e.fmt(f),
+            ServiceError::StorageError(e) => e.fmt(f),
         }
     }
 }
 
-impl From<Error> for ServiceError {
-    fn from(error: Error) -> Self {
-        match error {
-            Error::InvalidCString(_) => ServiceError::InvalidConnectionString,
-            Error::DatabaseError(_, _) => ServiceError::DatabaseError,
-            Error::NotFound => ServiceError::NotFound,
-            Error::QueryBuilderError(_) => ServiceError::QueryBuilderError,
-            Error::SerializationError(_) => ServiceError::SerializationError,
-            Error::AlreadyInTransaction => ServiceError::AlreadyInTransaction,
-            _ => unreachable!()
+impl From<DataStoreError> for ServiceError {
+    fn from(error: DataStoreError) -> Self {
+        if error == DataStoreError::NotFound {
+            ServiceError::NotFound
+        } else {
+            ServiceError::DataStoreError(error)
         }
+    }
+}
+
+impl From<StorageRouterError> for ServiceError {
+    fn from(error: StorageRouterError) -> Self {
+        ServiceError::StorageError(error)
     }
 }

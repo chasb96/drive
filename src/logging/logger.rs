@@ -34,9 +34,9 @@ impl Default for Logger<Stdout> {
 }
 
 impl<W: Write> Log for Logger<W> {
-    fn log(&mut self, log_level: &LogLevel, msg: &str) {
-        if log_level.is_on() && log_level >= &Env::log_level() {
-            write!(&mut self.out, "{}\n", msg).unwrap();
+    fn log(&mut self, log_level: LogLevel, msg: &str) {
+        if log_level.is_on() && log_level >= Env::log_level() {
+            writeln!(&mut self.out, "{}", msg).unwrap();
         }
     }
 }

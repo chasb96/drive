@@ -1,5 +1,5 @@
 use super::auth::Auth;
-use db::models::User;
+use entities::models::User;
 use rocket::http::Status;
 use rocket::request;
 use rocket::request::{FromRequest, Request};
@@ -26,9 +26,10 @@ impl<'a, 'r> FromRequest<'a, 'r> for Admin {
             _ => return Outcome::Failure((Status::Forbidden, AdminError)),
         };
 
-        match auth.clone().user().is_admin() {
-            true => Outcome::Success(Admin(auth.user())),
-            false => return Outcome::Failure((Status::Forbidden, AdminError)),
+        if auth.clone().user().is_admin() {
+            Outcome::Success(Admin(auth.user()))
+        } else {
+            Outcome::Failure((Status::Forbidden, AdminError))
         }
     }
 }

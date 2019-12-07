@@ -15,9 +15,9 @@ impl<'a> State<'a> {
         match &self.0.get_private("errors") {
             Some(cookie) => {
                 let errors: Vec<Error> =
-                    cookie.value().split("||").map(|e| Error::from(e)).collect();
+                    cookie.value().split("||").map(Error::from).collect();
 
-                &self.0.remove_private(Cookie::named("errors"));
+                self.0.remove_private(Cookie::named("errors"));
 
                 errors
             }
@@ -45,10 +45,10 @@ impl<'a> State<'a> {
                 let successes: Vec<Success> = cookie
                     .value()
                     .split("||")
-                    .map(|e| Success::from(e))
+                    .map(Success::from)
                     .collect();
 
-                &self.0.remove_private(Cookie::named("successes"));
+                self.0.remove_private(Cookie::named("successes"));
 
                 successes
             }

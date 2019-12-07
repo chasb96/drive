@@ -1,4 +1,4 @@
-![Build Status](https://travis-ci.org/chasb96/drive.svg?branch=master)
+![Build Status](https://travis-ci.org/chasb96/drive.svg?branch=di)
 
 # Project
 

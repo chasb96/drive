@@ -1,4 +1,5 @@
 use serde_derive::Serialize;
+use std::fmt;
 
 #[derive(Serialize)]
 pub struct Success(String);
@@ -11,14 +12,16 @@ impl Success {
     pub fn message(&self) -> &String {
         &self.0
     }
-
-    pub fn to_string(&self) -> String {
-        format!("{}", self.message()).to_string()
-    }
 }
 
 impl From<&str> for Success {
     fn from(from: &str) -> Self {
         Success(from.to_string())
+    }
+}
+
+impl fmt::Display for Success {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message())
     }
 }

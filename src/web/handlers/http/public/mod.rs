@@ -1,5 +1,5 @@
-use db::builders::{Builder, UserBuilder};
-use db::models::{File, User};
+use entities::builders::{Builder, UserBuilder};
+use entities::models::{File, User};
 use env::Env;
 use rocket::get;
 use rocket::http::Status;
@@ -7,6 +7,7 @@ use rocket::response::{Responder, Stream};
 use rocket_contrib::templates::Template;
 use serde_derive::Serialize;
 use web::state::State;
+use crate::controllers::file::FileController;
 
 #[derive(Serialize)]
 pub struct FileContext {
