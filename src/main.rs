@@ -27,6 +27,8 @@ extern crate tokio;
 #[cfg(test)]
 #[macro_use]
 extern crate fake;
+#[cfg(test)]
+extern crate mockall;
 
 #[macro_use]
 mod di;

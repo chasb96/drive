@@ -1,6 +1,12 @@
 use crate::entities::error::DataStoreError;
 use entities::models::File;
 
+#[cfg(test)]
+use mockall::*;
+#[cfg(test)]
+use mockall::predicate::*;
+
+#[cfg_attr(test, automock)]
 pub trait FileStore {
     fn find_by_file_id(&self, file_id: i32) -> Result<File, DataStoreError>;
 

@@ -86,18 +86,23 @@ impl<T: FileStore> FileService for Service<T> {
 #[cfg(test)]
 mod tests {
     use super::Service;
-    use crate::test::mocks::file::store::FileStoreMock;
     use crate::services::FileService;
     use crate::entities::builders::{ Builder, FileBuilder };
     use super::CreateRequest;
     use super::UpdateRequest;
+    use crate::entities::traits::file::MockFileStore;
 
     #[test]
     fn test_create() {
-        let file_store = FileStoreMock::new();
-        let file_service = Service::new(file_store);
-
         let expected = factory!(File, 1);
+        let expected_save_result = expected.clone();
+
+        let mut mock_file_store = MockFileStore::new();
+        mock_file_store
+            .expect_save()
+            .returning(move |_| Ok(expected_save_result.clone()));
+
+        let file_service = Service::new(mock_file_store);
 
         let request = CreateRequest {
             name: expected.name().to_string(),
@@ -109,19 +114,24 @@ mod tests {
 
         let actual = file_service.create(request).unwrap();
 
-        assert_eq!(expected.name(), actual.name());
-        assert_eq!(expected.extension(), actual.extension());
-        assert_eq!(expected.file_name(), actual.file_name());
-        assert_eq!(expected.folder_id(), actual.folder_id());
-        assert_eq!(expected.public(), actual.public());
+        assert_eq!(expected, actual);
     }
 
     #[test]
     fn test_update() {
-        let file_store = FileStoreMock::new();
-        let file_service = Service::new(file_store);
-
         let expected = factory!(File, 1);
+        let expected_update_result = expected.clone();
+        let expected_find_by_file_id_result = expected.clone();
+
+        let mut mock_file_store = MockFileStore::new();
+        mock_file_store
+            .expect_update()
+            .returning(move |_| Ok(expected_update_result.clone()));
+        mock_file_store
+            .expect_find_by_file_id()
+            .returning(move |_| Ok(expected_find_by_file_id_result.clone()));
+
+        let file_service = Service::new(mock_file_store);
 
         let request = UpdateRequest {
             id: expected.id(),
@@ -139,13 +149,22 @@ mod tests {
 
     #[test]
     fn test_delete() {
-        let file_store = FileStoreMock::new();
-        let file_service = Service::new(file_store);
-
         let expected = factory!(File, 1);
+        let expected_update_result = expected.clone();
+        let expected_find_by_file_id_result = expected.clone();
+
+        let mut mock_file_store = MockFileStore::new();
+        mock_file_store
+            .expect_delete()
+            .returning(move |_| Ok(expected_update_result.clone()));
+        mock_file_store
+            .expect_find_by_file_id()
+            .returning(move |_| Ok(expected_find_by_file_id_result.clone()));
+
+        let file_service = Service::new(mock_file_store);
 
         let actual = file_service.delete(expected.id()).unwrap();
 
-        assert_eq!(expected.id(), actual.id());
+        assert_eq!(expected, actual);
     }
 }
