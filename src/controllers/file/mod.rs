@@ -5,7 +5,7 @@ use crate::entities::models::User;
 use crate::entities::models::File;
 use std::fs;
 
-pub struct CreateRequest {
+pub struct StoreRequest {
     pub name: String,
     pub extension: String,
     pub user_id: i32,
@@ -29,7 +29,7 @@ pub trait FileController {
 
     fn create(&self, user: User) -> Result<(), ControllerError>;
 
-    fn store(&self, user: User, request: CreateRequest) -> Result<File, ControllerError>;
+    fn store(&self, user: User, request: StoreRequest) -> Result<File, ControllerError>;
 
     fn edit(&self, user: User, file_id: i32) -> Result<File, ControllerError>;
 

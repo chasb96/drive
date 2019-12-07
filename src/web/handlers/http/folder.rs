@@ -1,3 +1,5 @@
+use controllers::folder::UpdateRequest;
+use controllers::folder::StoreRequest;
 use entities::models::{File, Folder, User};
 use rocket::http::Status;
 use rocket::request::Form;
@@ -10,6 +12,7 @@ use web::guards::auth::Auth;
 use web::state::State;
 use web::success::Success;
 use crate::controllers::file::FileController;
+use crate::controllers::folder::FolderController;
 
 #[get("/folders")]
 pub fn index(_auth: Auth) -> impl Responder<'static> {
@@ -27,9 +30,10 @@ struct FolderContext {
 #[get("/folders/<folder_id>")]
 pub fn show(auth: Auth, state: State, folder_id: i32) -> impl Responder<'static> {
     let file_controller = resolve!(FileController);
+    let folder_controller = resolve!(FolderController);
     let user = auth.user();
 
-    let folder = match <resolve!(FolderController)>::show(user.clone(), folder_id) {
+    let folder = match folder_controller.show(user.clone(), folder_id) {
         Ok(folder) => folder,
         Err(e) => {
             log!(
@@ -42,7 +46,7 @@ pub fn show(auth: Auth, state: State, folder_id: i32) -> impl Responder<'static>
         }
     };
 
-    let subfolders = match <resolve!(FolderController)>::index(user.clone(), Some(folder_id)) {
+    let subfolders = match folder_controller.index(user.clone(), Some(folder_id)) {
         Ok(subfolders) => subfolders,
         Err(e) => {
             log!(
@@ -86,11 +90,12 @@ pub struct CreateContext {
 
 #[get("/folders/create?<folder_id>")]
 pub fn create(auth: Auth, state: State, folder_id: Option<i32>) -> impl Responder<'static> {
+    let folder_controller = resolve!(FolderController);
     let user = auth.user();
 
     let mut parent = None;
     if let Some(folder_id) = folder_id {
-        parent = match <resolve!(FolderController)>::show(user.clone(), folder_id) {
+        parent = match folder_controller.show(user.clone(), folder_id) {
             Ok(parent) => Some(parent),
             Err(e) => {
                 log!(
@@ -109,7 +114,7 @@ pub fn create(auth: Auth, state: State, folder_id: Option<i32>) -> impl Responde
         parent,
     });
 
-    match <resolve!(FolderController)>::create(user) {
+    match folder_controller.create(user) {
         Ok(_) => Ok(Template::render("folder/create", &context)),
         Err(e) => Err(Status::from(e)),
     }
@@ -127,9 +132,16 @@ pub fn store(
     folder_id: Option<i32>,
     payload: Form<StorePayload>,
 ) -> impl Responder<'static> {
+    let folder_controller = resolve!(FolderController);
     let user = auth.user();
 
-    match <resolve!(FolderController)>::store(user.clone(), payload.name.to_owned(), user.id(), folder_id) {
+    let store_request = StoreRequest {
+        name: payload.name.to_owned(),
+        user_id: user.id(),
+        parent_id: folder_id
+    };
+
+    match folder_controller.store(user, store_request) {
         Ok(folder) => {
             state.push_success(Success::new(format!(
                 "Folder {} successfully created!",
@@ -151,10 +163,11 @@ pub struct EditContext {
 
 #[get("/folders/<folder_id>/edit")]
 pub fn edit(auth: Auth, state: State, folder_id: i32) -> impl Responder<'static> {
+    let folder_controller = resolve!(FolderController);
     let user = auth.user();
 
     let mut parent = None;
-    let folder = match <resolve!(FolderController)>::edit(user.clone(), folder_id) {
+    let folder = match folder_controller.edit(user.clone(), folder_id) {
         Ok(folder) => folder,
         Err(e) => {
             log!(
@@ -168,7 +181,7 @@ pub fn edit(auth: Auth, state: State, folder_id: i32) -> impl Responder<'static>
     };
 
     if let Some(parent_id) = folder.parent_id() {
-        parent = match <resolve!(FolderController)>::show(user.clone(), *parent_id) {
+        parent = match folder_controller.show(user.clone(), *parent_id) {
             Ok(parent) => Some(parent),
             Err(e) => {
                 log!(
@@ -199,15 +212,17 @@ pub struct UpdatePayload {
 
 #[post("/folders/<folder_id>", data = "<payload>")]
 pub fn update(auth: Auth, folder_id: i32, payload: Form<UpdatePayload>) -> impl Responder<'static> {
+    let folder_controller = resolve!(FolderController);
     let user = auth.user();
 
-    match <resolve!(FolderController)>::update(
-        user.clone(),
+    let update_request = UpdateRequest {
         folder_id,
-        payload.name.to_owned(),
-        user.id(),
-        payload.parent_id,
-    ) {
+        name: payload.name.to_owned(),
+        user_id: user.id(),
+        parent_id: payload.parent_id
+    };
+
+    match folder_controller.update(user, update_request) {
         Ok(folder) => Ok(Redirect::to(format!("/folders/{}", folder.id()))),
         Err(e) => Err(Status::from(e)),
     }
@@ -215,9 +230,10 @@ pub fn update(auth: Auth, folder_id: i32, payload: Form<UpdatePayload>) -> impl 
 
 #[post("/folders/<folder_id>/delete")]
 pub fn delete(auth: Auth, folder_id: i32) -> impl Responder<'static> {
+    let folder_controller = resolve!(FolderController);
     let user = auth.user();
 
-    match <resolve!(FolderController)>::delete(user, folder_id) {
+    match folder_controller.delete(user, folder_id) {
         Ok(folder) => match folder.parent_id() {
             Some(parent_id) => Ok(Redirect::to(format!("/folders/{}", parent_id))),
             None => Ok(Redirect::to("/")),

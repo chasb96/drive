@@ -29,7 +29,9 @@ macro_rules! resolve {
     };
 
     (FolderController) => {
-        crate::controllers::FolderController
+        crate::controllers::folder::implementation::Controller::new(
+            resolve!(FolderService)
+        )
     };
 
     (UserController) => {

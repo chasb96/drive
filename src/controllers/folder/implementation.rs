@@ -1,22 +1,31 @@
-use super::error::ControllerError as Error;
+use crate::controllers::error::ControllerError as Error;
 use entities::models::{Folder, User};
 use policies::Restricted;
-use services::FolderService;
-use crate::services::folder::CreateRequest;
-use crate::services::folder::UpdateRequest;
+use crate::services::folder::CreateRequest as ServiceCreateRequest;
+use crate::services::folder::UpdateRequest as ServiceUpdateRequest;
 use crate::services::error::ServiceError;
+use crate::controllers::folder::FolderController;
+use crate::services::FolderService;
+use crate::controllers::folder::StoreRequest;
+use crate::controllers::folder::UpdateRequest;
 
-pub struct FolderController;
+pub struct Controller<T: FolderService> {
+    folder_service: T
+}
 
-impl FolderController {
-    pub fn index(user: User, parent_id: Option<i32>) -> Result<Vec<Folder>, Error> {
-        let folder_service = resolve!(FolderService);
+impl<T: FolderService> Controller<T> {
+    pub fn new(folder_service: T) -> Self {
+        Self { folder_service }
+    }
+}
 
+impl<T: FolderService> FolderController for Controller<T> {
+    fn index(&self, user: User, parent_id: Option<i32>) -> Result<Vec<Folder>, Error> {
         if !user.can_index::<Folder>() {
             return Err(Error::Forbidden);
         }
 
-        let mut folders = match folder_service.all(user.id()) {
+        let mut folders = match self.folder_service.all(user.id()) {
             Ok(folders) => folders,
             Err(ServiceError::NotFound) => return Err(Error::NotFound),
             Err(e) => {
@@ -33,10 +42,8 @@ impl FolderController {
         Ok(folders)
     }
 
-    pub fn show(user: User, folder_id: i32) -> Result<Folder, Error> {
-        let folder_service = resolve!(FolderService);
-
-        let found: Folder = match folder_service.find(folder_id) {
+    fn show(&self, user: User, folder_id: i32) -> Result<Folder, Error> {
+        let found: Folder = match self.folder_service.find(folder_id) {
             Ok(folder) => folder,
             Err(ServiceError::NotFound) => return Err(Error::NotFound),
             Err(e) => {
@@ -52,7 +59,7 @@ impl FolderController {
         }
     }
 
-    pub fn create(user: User) -> Result<(), Error> {
+    fn create(&self, user: User) -> Result<(), Error> {
         if user.can_create::<Folder>() {
             Ok(())
         } else {
@@ -60,34 +67,25 @@ impl FolderController {
         }
     }
 
-    pub fn store(
-        user: User,
-        name: String,
-        user_id: i32,
-        parent_id: Option<i32>,
-    ) -> Result<Folder, Error> {
-        let folder_service = resolve!(FolderService);
-
+    fn store(&self, user: User, request: StoreRequest) -> Result<Folder, Error> {
         if !user.can_create::<Folder>() {
             return Err(Error::Forbidden);
         }
 
-        let request = CreateRequest {
-            name,
-            user_id,
-            parent_id,
+        let service_create_request = ServiceCreateRequest {
+            name: request.name,
+            user_id: request.user_id,
+            parent_id: request.parent_id,
         };
 
-        match folder_service.create(request) {
+        match self.folder_service.create(service_create_request) {
             Ok(folder) => Ok(folder),
             Err(_) => Err(Error::InternalServerError),
         }
     }
 
-    pub fn edit(user: User, folder_id: i32) -> Result<Folder, Error> {
-        let folder_service = resolve!(FolderService);
-
-        let found: Folder = match folder_service.find(folder_id) {
+    fn edit(&self, user: User, folder_id: i32) -> Result<Folder, Error> {
+        let found: Folder = match self.folder_service.find(folder_id) {
             Ok(folder) => folder,
             Err(ServiceError::NotFound) => return Err(Error::NotFound),
             Err(e) => {
@@ -103,16 +101,8 @@ impl FolderController {
         }
     }
 
-    pub fn update(
-        user: User,
-        folder_id: i32,
-        name: String,
-        user_id: i32,
-        parent_id: Option<i32>,
-    ) -> Result<Folder, Error> {
-        let folder_service = resolve!(FolderService);
-
-        let found: Folder = match folder_service.find(folder_id) {
+    fn update(&self, user: User, request: UpdateRequest) -> Result<Folder, Error> {
+        let found: Folder = match self.folder_service.find(request.folder_id) {
             Ok(folder) => folder,
             Err(ServiceError::NotFound) => return Err(Error::NotFound),
             Err(e) => {
@@ -125,14 +115,14 @@ impl FolderController {
             return Err(Error::Forbidden);
         }
 
-        let request = UpdateRequest {
-            id: folder_id,
-            name,
-            user_id,
-            parent_id
+        let service_update_request = ServiceUpdateRequest {
+            id: request.folder_id,
+            name: request.name,
+            user_id: request.user_id,
+            parent_id: request.parent_id,
         };
 
-        match folder_service.update(request) {
+        match self.folder_service.update(service_update_request) {
             Ok(folder) => Ok(folder),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);
@@ -142,10 +132,8 @@ impl FolderController {
         }
     }
 
-    pub fn delete(user: User, folder_id: i32) -> Result<Folder, Error> {
-        let folder_service = resolve!(FolderService);
-
-        let found: Folder = match folder_service.find(folder_id) {
+    fn delete(&self, user: User, folder_id: i32) -> Result<Folder, Error> {
+        let found: Folder = match self.folder_service.find(folder_id) {
             Ok(folder) => folder,
             Err(ServiceError::NotFound) => return Err(Error::NotFound),
             Err(e) => {
@@ -158,7 +146,7 @@ impl FolderController {
             return Err(Error::Forbidden);
         }
 
-        match folder_service.delete(folder_id) {
+        match self.folder_service.delete(folder_id) {
             Ok(folder) => Ok(folder),
             Err(e) => {
                 log!("error", "500 Internal Server Error: {}", e);

@@ -7,6 +7,7 @@ use serde_derive::Serialize;
 use web::guards::auth::Auth;
 use web::state::State;
 use crate::controllers::file::FileController;
+use crate::controllers::folder::FolderController;
 
 #[derive(Serialize)]
 struct HomeContext {
@@ -19,10 +20,11 @@ struct HomeContext {
 
 #[get("/")]
 pub fn home(auth: Auth, state: State) -> impl Responder<'static> {
+    let folder_controller = resolve!(FolderController);
     let file_controller = resolve!(FileController);
     let user = auth.user();
 
-    let folder = match <resolve!(FolderController)>::index(user.clone(), None) {
+    let folder = match folder_controller.index(user.clone(), None) {
         Ok(folders) => match folders.first() {
             Some(root) => root.to_owned(),
             None => return Err(Status::InternalServerError),
@@ -38,7 +40,7 @@ pub fn home(auth: Auth, state: State) -> impl Responder<'static> {
         }
     };
 
-    let folders = match <resolve!(FolderController)>::index(user.clone(), Some(folder.id())) {
+    let folders = match folder_controller.index(user.clone(), Some(folder.id())) {
         Ok(folders) => folders,
         Err(e) => {
             log!(

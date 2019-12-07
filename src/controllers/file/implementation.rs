@@ -1,5 +1,5 @@
 use controllers::file::UpdateRequest;
-use controllers::file::CreateRequest;
+use controllers::file::StoreRequest;
 use controllers::file::FileController;
 use crate::controllers::error::ControllerError as Error;
 use entities::models::File;
@@ -76,7 +76,7 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
         }
     }
 
-    fn store(&self, user: User, request: CreateRequest) -> Result<File, Error> {
+    fn store(&self, user: User, request: StoreRequest) -> Result<File, Error> {
         // Verify that the user can create files first.
         // If they cannot, return back a Forbidden
         if !user.can_create::<File>() {

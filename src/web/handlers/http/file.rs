@@ -1,4 +1,4 @@
-use controllers::file::CreateRequest;
+use controllers::file::StoreRequest;
 use controllers::file::UpdateRequest;
 use entities::models::{File, Folder, User};
 use env::Env;
@@ -19,6 +19,7 @@ use web::guards::auth::Auth;
 use web::state::State;
 use web::success::Success;
 use crate::controllers::file::FileController;
+use controllers::folder::FolderController;
 
 #[get("/folders/<folder_id>/files")]
 pub fn index(_auth: Auth, folder_id: i32) -> impl Responder<'static> {
@@ -34,6 +35,7 @@ pub struct ShowContext {
 
 #[get("/folders/<_folder_id>/files/<file_id>", rank = 2)]
 pub fn show(auth: Auth, state: State, _folder_id: i32, file_id: i32) -> impl Responder<'static> {
+    let folder_controller = resolve!(FolderController);
     let file_controller = resolve!(FileController);
     let user = auth.user();
 
@@ -50,7 +52,7 @@ pub fn show(auth: Auth, state: State, _folder_id: i32, file_id: i32) -> impl Res
         }
     };
 
-    let folder = match <resolve!(FolderController)>::show(user.clone(), file.folder_id()) {
+    let folder = match folder_controller.show(user.clone(), file.folder_id()) {
         Ok(folder) => folder,
         Err(e) => {
             log!(
@@ -76,6 +78,7 @@ pub struct CreateContext {
 
 #[get("/folders/<folder_id>/files/create", rank = 1)]
 pub fn create(auth: Auth, state: State, folder_id: i32) -> impl Responder<'static> {
+    let folder_controller = resolve!(FolderController);
     let file_controller = resolve!(FileController);
     let user = auth.user();
 
@@ -83,7 +86,7 @@ pub fn create(auth: Auth, state: State, folder_id: i32) -> impl Responder<'stati
         return Err(Status::from(e));
     }
 
-    let folder = match <resolve!(FolderController)>::show(user.clone(), folder_id) {
+    let folder = match folder_controller.show(user.clone(), folder_id) {
         Ok(folder) => folder,
         Err(e) => {
             log!(
@@ -140,7 +143,7 @@ pub fn store(
 
     let mut parts = name.splitn(2, '.');
 
-    let store_request = CreateRequest {
+    let store_request = StoreRequest {
         name: parts.nth(0).unwrap_or("").to_string(),
         extension: parts.nth(0).unwrap_or("").to_string(),
         user_id: user.id(),
@@ -184,6 +187,7 @@ pub struct EditContext {
 
 #[get("/folders/<_folder_id>/files/<file_id>/edit")]
 pub fn edit(auth: Auth, state: State, _folder_id: i32, file_id: i32) -> impl Responder<'static> {
+    let folder_controller = resolve!(FolderController);
     let file_controller = resolve!(FileController);
     let user = auth.user();
 
@@ -200,7 +204,7 @@ pub fn edit(auth: Auth, state: State, _folder_id: i32, file_id: i32) -> impl Res
         }
     };
 
-    let folder = match <resolve!(FolderController)>::edit(user.clone(), file.folder_id()) {
+    let folder = match folder_controller.edit(user.clone(), file.folder_id()) {
         Ok(folder) => folder,
         Err(e) => {
             log!(
