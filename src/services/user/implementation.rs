@@ -55,7 +55,7 @@ impl<T: UserStore, S: FolderService> UserService for Service<T, S> {
 
         // Store the User
         // If the store fails, return back the error
-        self.user_store.save(&user)?;
+        let user = self.user_store.save(&user)?;
 
         let folder_create_request = FolderCreateRequest {
             name: "/".to_string(),
@@ -140,18 +140,22 @@ mod tests {
     use super::CreateRequest;
     use super::UpdateRequest;
     use crate::test::mocks::folder::service::FolderServiceMock;
-    use crate::test::mocks::user::store::UserStoreMock;
     use crate::services::UserService;
     use crate::entities::builders::{ Builder, UserBuilder };
-    use bcrypt::verify;
+    use crate::entities::traits::user::MockUserStore;
 
     #[test]
     fn test_create() {
-        let folder_service = FolderServiceMock::new();
-        let user_store = UserStoreMock::new();
-        let user_service = Service::new(user_store, folder_service);
-
         let expected = factory!(User);
+        let expected_save = expected.clone();
+
+        let mut mock_user_store = MockUserStore::new();
+        mock_user_store
+            .expect_save()
+            .returning(move |_| Ok(expected_save.clone()));
+
+        let folder_service = FolderServiceMock::new();
+        let user_service = Service::new(mock_user_store, folder_service);
 
         let request = CreateRequest {
             name: expected.name().to_string(),
@@ -162,18 +166,27 @@ mod tests {
 
         let actual = user_service.create(request).unwrap();
 
+        assert_eq!(expected.id(), actual.id());
         assert_eq!(expected.name(), actual.name());
         assert_eq!(expected.email(), actual.email());
-        assert!(verify(expected.password(), actual.password()).unwrap());
     }
 
     #[test]
     fn test_update() {
-        let folder_service = FolderServiceMock::new();
-        let user_store = UserStoreMock::new();
-        let user_service = Service::new(user_store, folder_service);
-
         let expected = factory!(User);
+        let expected_update = expected.clone();
+        let expected_find_by_user_id = expected.clone();
+
+        let mut mock_user_store = MockUserStore::new();
+        mock_user_store
+            .expect_update()
+            .returning(move |_| Ok(expected_update.clone()));
+        mock_user_store
+            .expect_find_by_user_id()
+            .returning(move |_| Ok(expected_find_by_user_id.clone()));
+
+        let folder_service = FolderServiceMock::new();
+        let user_service = Service::new(mock_user_store, folder_service);
 
         let request = UpdateRequest {
             id: expected.id(),
@@ -191,16 +204,25 @@ mod tests {
 
     #[test]
     fn test_delete() {
-        let folder_service = FolderServiceMock::new();
-        let user_store = UserStoreMock::new();
-        let user_service = Service::new(user_store, folder_service);
-
         let expected = factory!(User);
+        let expected_delete = expected.clone();
+        let expected_find_by_user_id = expected.clone();
 
-        let actual = user_service.delete(
-            expected.id(),
-        )
-        .unwrap();
+        let mut mock_user_store = MockUserStore::new();
+        mock_user_store
+            .expect_delete()
+            .returning(move |_| Ok(expected_delete.clone()));
+        mock_user_store
+            .expect_find_by_user_id()
+            .returning(move |_| Ok(expected_find_by_user_id.clone()));
+        mock_user_store
+            .expect_folders()
+            .returning(|_| Ok(Vec::new()));
+
+        let folder_service = FolderServiceMock::new();
+        let user_service = Service::new(mock_user_store, folder_service);
+
+        let actual = user_service.delete(expected.id()).unwrap();
 
         assert_eq!(expected.id(), actual.id());
     }

@@ -2,6 +2,12 @@ use entities::models::Folder;
 use crate::entities::error::DataStoreError;
 use entities::models::User;
 
+#[cfg(test)]
+use mockall::*;
+#[cfg(test)]
+use mockall::predicate::*;
+
+#[cfg_attr(test, automock)]
 pub trait UserStore {
     fn all(&self) -> Result<Vec<User>, DataStoreError>;
 
