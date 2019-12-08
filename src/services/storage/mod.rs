@@ -3,6 +3,12 @@ pub mod implementation;
 use std::fs::File;
 use crate::services::error::ServiceError;
 
+#[cfg(test)]
+use mockall::*;
+#[cfg(test)]
+use mockall::predicate::*;
+
+#[cfg_attr(test, automock)]
 pub trait StorageService {
     fn store(&self, directory: String, input: File) -> Result<String, ServiceError>;
 

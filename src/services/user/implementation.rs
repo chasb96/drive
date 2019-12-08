@@ -139,10 +139,11 @@ mod tests {
     use super::Service;
     use super::CreateRequest;
     use super::UpdateRequest;
-    use crate::test::mocks::folder::service::FolderServiceMock;
     use crate::services::UserService;
     use crate::entities::builders::{ Builder, UserBuilder };
     use crate::entities::traits::user::MockUserStore;
+    use crate::services::folder::MockFolderService;
+    use crate::entities::models::Folder;
 
     #[test]
     fn test_create() {
@@ -154,8 +155,12 @@ mod tests {
             .expect_save()
             .returning(move |_| Ok(expected_save.clone()));
 
-        let folder_service = FolderServiceMock::new();
-        let user_service = Service::new(mock_user_store, folder_service);
+        let mut mock_folder_service = MockFolderService::new();
+        mock_folder_service
+            .expect_create()
+            .returning(|_| Ok(Folder::default()));
+
+        let user_service = Service::new(mock_user_store, mock_folder_service);
 
         let request = CreateRequest {
             name: expected.name().to_string(),
@@ -185,8 +190,8 @@ mod tests {
             .expect_find_by_user_id()
             .returning(move |_| Ok(expected_find_by_user_id.clone()));
 
-        let folder_service = FolderServiceMock::new();
-        let user_service = Service::new(mock_user_store, folder_service);
+        let mock_folder_service = MockFolderService::new();
+        let user_service = Service::new(mock_user_store, mock_folder_service);
 
         let request = UpdateRequest {
             id: expected.id(),
@@ -219,8 +224,12 @@ mod tests {
             .expect_folders()
             .returning(|_| Ok(Vec::new()));
 
-        let folder_service = FolderServiceMock::new();
-        let user_service = Service::new(mock_user_store, folder_service);
+        let mut mock_folder_service = MockFolderService::new();
+        mock_folder_service
+            .expect_delete()
+            .returning(|_| Ok(Folder::default()));
+
+        let user_service = Service::new(mock_user_store, mock_folder_service);
 
         let actual = user_service.delete(expected.id()).unwrap();
 

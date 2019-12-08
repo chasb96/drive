@@ -1,3 +1,5 @@
+// Clippy loses its mind on automocks
+#![cfg_attr(test, allow(clippy::ptr_arg))]
 #![feature(proc_macro_hygiene, decl_macro, specialization)]
 #![feature(optin_builtin_traits)]
 extern crate chrono;

@@ -3,6 +3,11 @@ pub mod implementation;
 use services::error::ServiceError;
 use entities::models::User;
 
+#[cfg(test)]
+use mockall::*;
+#[cfg(test)]
+use mockall::predicate::*;
+
 pub struct CreateRequest {
     pub name: String,
     pub email: String,
@@ -17,6 +22,7 @@ pub struct UpdateRequest {
     pub role: String,
 }
 
+#[cfg_attr(test, automock)]
 pub trait UserService {
     fn all(&self) -> Result<Vec<User>, ServiceError>;
 

@@ -3,6 +3,11 @@ pub mod implementation;
 use entities::models::Folder;
 use crate::services::error::ServiceError;
 
+#[cfg(test)]
+use mockall::*;
+#[cfg(test)]
+use mockall::predicate::*;
+
 pub struct CreateRequest {
     pub name: String,
     pub user_id: i32,
@@ -16,6 +21,7 @@ pub struct UpdateRequest {
     pub parent_id: Option<i32>
 }
 
+#[cfg_attr(test, automock)]
 pub trait FolderService {
     fn all(&self, user_id: i32) -> Result<Vec<Folder>, ServiceError>;
 

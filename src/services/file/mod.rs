@@ -3,6 +3,11 @@ pub mod implementation;
 use entities::models::File;
 use services::error::ServiceError;
 
+#[cfg(test)]
+use mockall::*;
+#[cfg(test)]
+use mockall::predicate::*;
+
 pub struct CreateRequest {
     pub name: String,
     pub extension: String,
@@ -20,6 +25,7 @@ pub struct UpdateRequest {
     pub public: bool,
 }
 
+#[cfg_attr(test, automock)]
 pub trait FileService {
     fn all(&self, folder_id: i32) -> Result<Vec<File>, ServiceError>;
 
