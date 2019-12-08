@@ -2,6 +2,12 @@ use entities::models::Folder;
 use crate::entities::error::DataStoreError;
 use entities::models::File;
 
+#[cfg(test)]
+use mockall::*;
+#[cfg(test)]
+use mockall::predicate::*;
+
+#[cfg_attr(test, automock)]
 pub trait FolderStore {
     fn find_by_user_id(&self, user_id: i32) -> Result<Vec<Folder>, DataStoreError>;
 
