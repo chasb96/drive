@@ -1,9 +1,9 @@
+use policies::file::FileAuthorizer;
 use controllers::file::UpdateRequest;
 use controllers::file::StoreRequest;
 use controllers::file::FileController;
 use crate::controllers::error::ControllerError as Error;
 use entities::models::File;
-use policies::Restricted;
 use std::fs;
 use crate::services::FileService;
 use services::error::ServiceError;
@@ -12,21 +12,23 @@ use crate::services::StorageService;
 use crate::services::file::CreateRequest as ServiceCreateRequest;
 use crate::services::file::UpdateRequest as ServiceUpdateRequest;
 
-pub struct Controller<T: FileService, S: StorageService> {
+pub struct Controller<T: FileService, S: StorageService, R: FileAuthorizer> {
     file_service: T,
-    storage_service: S
+    storage_service: S,
+    file_authorizer: R,
 }
 
-impl<T: FileService, S: StorageService> Controller<T, S> {
-    pub fn new(file_service: T, storage_service: S) -> Self {
+impl<T: FileService, S: StorageService, R: FileAuthorizer> Controller<T, S, R> {
+    pub fn new(file_service: T, storage_service: S, file_authorizer: R) -> Self {
         Self {
             file_service,
             storage_service,
+            file_authorizer
         }
     }
 }
 
-impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
+impl<T: FileService, S: StorageService, R: FileAuthorizer> FileController for Controller<T, S, R> {
     fn index(&self, _: User, folder_id: i32) -> Result<Vec<File>, Error> {
         match self.file_service.all(folder_id)
         {
@@ -61,7 +63,7 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
         // We through a NotFound instead of Forbidden
         //  as we don't want to yield that this file
         //  actually exists if they cannot access it
-        if user.can_view(found.clone()) {
+        if self.file_authorizer.can_view(&user, &found) {
             Ok(found)
         } else {
             Err(Error::NotFound)
@@ -69,7 +71,7 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
     }
 
     fn create(&self, user: User) -> Result<(), Error> {
-        if user.can_create::<File>() {
+        if self.file_authorizer.can_create(&user) {
             Ok(())
         } else {
             Err(Error::Forbidden)
@@ -79,7 +81,7 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
     fn store(&self, user: User, request: StoreRequest) -> Result<File, Error> {
         // Verify that the user can create files first.
         // If they cannot, return back a Forbidden
-        if !user.can_create::<File>() {
+        if !self.file_authorizer.can_create(&user) {
             return Err(Error::Forbidden);
         }
 
@@ -134,7 +136,7 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
         // We through a NotFound instead of Forbidden
         //  as we don't want to yield that this file
         //  actually exists if they cannot access it
-        if user.can_modify(found.clone()) {
+        if self.file_authorizer.can_modify(&user, &found) {
             Ok(found)
         } else {
             Err(Error::NotFound)
@@ -160,7 +162,7 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
         // Instead of Forbidden, if the user can't
         //  modify this, we don't want to reveal that the
         //  option exists, so we throw a NotFound instead
-        if !user.can_modify(found.clone()) {
+        if !self.file_authorizer.can_modify(&user, &found) {
             return Err(Error::NotFound);
         }
 
@@ -174,7 +176,7 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
         };
 
         // Attempt to update the file,
-        // If something goes wrong, log it and throw it back
+        //  if something goes wrong, log it and throw it back
         match self.file_service.update(file_update_request) {
             Ok(file) => Ok(file),
             Err(e) => {
@@ -186,6 +188,7 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
 
     fn delete(&self, user: User, file_id: i32) -> Result<File, Error> {
         // Attempt to find the file by its Id
+        //
         // If it's not found, return a not found,
         //  in case of error, throw back an InternalServerError
         let found: File = match self.file_service.find(file_id) {
@@ -199,7 +202,7 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
 
         // If the user is not allowed to access this file,
         //  we don't to show that the behavior exists
-        if !user.can_delete(found.clone()) {
+        if !self.file_authorizer.can_delete(&user, &found) {
             return Err(Error::NotFound);
         }
 
@@ -235,15 +238,18 @@ impl<T: FileService, S: StorageService> FileController for Controller<T, S> {
 
         // If the user cannot view this file,
         //  mask it behind a NotFound
-        if !user.can_view(found.clone()) {
+        if !self.file_authorizer.can_view(&user, &found) {
             return Err(Error::NotFound);
         }
 
         // This is less obvious than it looks:
+        //
         // There's no guarantee here that the file technically
         //  corresponds to this User, other than the above assertions
+        //
         // But, if the above fails, it'll still only try to yield
         //  something of their ownership.
+        //
         // This is an impossible case, so we just return a 500 here
         //  on error
         match self.storage_service.read(user.id().to_string(), found.file_name().to_string()) {

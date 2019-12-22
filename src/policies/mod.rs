@@ -1,6 +1,6 @@
-mod file;
-mod folder;
-mod user;
+pub mod file;
+pub mod folder;
+pub mod user;
 
 use entities::Entity;
 

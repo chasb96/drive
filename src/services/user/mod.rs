@@ -1,4 +1,4 @@
-pub mod implementation;
+pub mod service;
 
 use services::error::ServiceError;
 use entities::models::User;

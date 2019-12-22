@@ -1,4 +1,4 @@
-pub mod implementation;
+pub mod controller;
 
 use crate::controllers::error::ControllerError;
 use crate::entities::models::User;
