@@ -1,3 +1,4 @@
+use policies::user::UserAuthorizer;
 use controllers::user::UpdateRequest;
 use controllers::user::StoreRequest;
 use controllers::user::UserController;
@@ -5,23 +6,26 @@ use services::user::CreateRequest as ServiceCreateRequest;
 use services::user::UpdateRequest as ServiceUpdateRequest;
 use controllers::error::ControllerError as Error;
 use entities::models::User;
-use policies::Restricted;
 use services::UserService;
 use services::error::ServiceError;
 
-pub struct Controller<T: UserService> {
-    user_service: T
+pub struct Controller<T: UserService, S: UserAuthorizer> {
+    user_service: T,
+    user_authorizer: S
 }
 
-impl<T: UserService> Controller<T> {
-    pub fn new(user_service: T) -> Self {
-        Self { user_service }
+impl<T: UserService, S: UserAuthorizer> Controller<T, S> {
+    pub fn new(user_service: T, user_authorizer: S) -> Self {
+        Self {
+            user_service,
+            user_authorizer,
+        }
     }
 }
 
-impl<T: UserService> UserController for Controller<T> {
+impl<T: UserService, S: UserAuthorizer> UserController for Controller<T, S> {
     fn index(&self, user: User) -> Result<Vec<User>, Error> {
-        if !user.can_index::<User>() {
+        if !self.user_authorizer.can_index(&user) {
             return Err(Error::Forbidden);
         }
 
@@ -43,7 +47,7 @@ impl<T: UserService> UserController for Controller<T> {
             }
         };
 
-        if user.can_view(found.clone()) {
+        if self.user_authorizer.can_view(&user, &found) {
             Ok(found)
         } else {
             Err(Error::Forbidden)
@@ -51,7 +55,7 @@ impl<T: UserService> UserController for Controller<T> {
     }
 
     fn create(&self, user: User) -> Result<(), Error> {
-        if user.can_create::<User>() {
+        if self.user_authorizer.can_create(&user) {
             Ok(())
         } else {
             Err(Error::Forbidden)
@@ -61,7 +65,7 @@ impl<T: UserService> UserController for Controller<T> {
     fn store(&self, user: User, request: StoreRequest) -> Result<User, Error> {
         // We already know the context of the User,
         //  first verify they can create Users
-        if !user.can_create::<User>() {
+        if !self.user_authorizer.can_create(&user) {
             return Err(Error::Forbidden);
         }
 
@@ -94,7 +98,7 @@ impl<T: UserService> UserController for Controller<T> {
             }
         };
 
-        if user.can_modify(found.clone()) {
+        if self.user_authorizer.can_modify(&user, &found) {
             Ok(found)
         } else {
             Err(Error::Forbidden)
@@ -115,7 +119,7 @@ impl<T: UserService> UserController for Controller<T> {
         };
 
         // Verify the user can modify this user
-        if !user.can_modify(found) {
+        if !self.user_authorizer.can_modify(&user, &found) {
             return Err(Error::Forbidden);
         }
 
@@ -149,7 +153,7 @@ impl<T: UserService> UserController for Controller<T> {
         };
 
         // Verify that the user can delete this user
-        if !user.can_delete(found) {
+        if !self.user_authorizer.can_delete(&user, &found) {
             return Err(Error::Forbidden);
         }
 
@@ -176,7 +180,7 @@ impl<T: UserService> UserController for Controller<T> {
         };
 
         // Verify that the user has permissions to update users
-        if !user.can_modify(found) {
+        if !self.user_authorizer.can_modify(&user, &found) {
             return Err(Error::Forbidden);
         }
 

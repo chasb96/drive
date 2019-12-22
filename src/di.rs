@@ -38,7 +38,8 @@ macro_rules! resolve {
 
     (UserController) => {
         crate::controllers::user::controller::Controller::new(
-            resolve!(UserService)
+            resolve!(UserService),
+            resolve!(UserAuthorizer)
         )
     };
 
@@ -60,5 +61,9 @@ macro_rules! resolve {
 
     (FolderAuthorizer) => {
         crate::policies::folder::Authorizer::new()
+    };
+
+    (UserAuthorizer) => {
+        crate::policies::user::Authorizer::new()
     }
 }
