@@ -2,7 +2,7 @@ use super::aws::rusoto::s3::S3;
 use super::disk::Disk;
 use super::storage_driver_option::StorageDriverOption;
 use super::StorageDriver;
-use env::Env;
+use crate::env::Env;
 use std::error::Error;
 use std::fmt;
 use std::fs::File;

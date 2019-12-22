@@ -1,8 +1,8 @@
 use super::token_convert::TokenError;
-use auth::authenticate::Authenticate;
-use auth::bearer::Token;
-use auth::Auth as InternalAuth;
-use entities::models::User;
+use crate::auth::authenticate::Authenticate;
+use crate::auth::bearer::Token;
+use crate::auth::Auth as InternalAuth;
+use crate::entities::models::User;
 use rocket::http::{Cookie, Status};
 use rocket::request;
 use rocket::request::{FromRequest, Request};

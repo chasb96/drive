@@ -1,5 +1,5 @@
-use entities::traits::file::FileStore;
-use entities::models::File;
+use crate::entities::traits::file::FileStore;
+use crate::entities::models::File;
 use crate::entities::error::DataStoreError;
 use crate::entities::builders::{ Builder, FileBuilder };
 

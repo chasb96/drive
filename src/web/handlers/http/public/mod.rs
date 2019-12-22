@@ -1,12 +1,12 @@
-use entities::builders::{Builder, UserBuilder};
-use entities::models::{File, User};
-use env::Env;
+use crate::entities::builders::{Builder, UserBuilder};
+use crate::entities::models::{File, User};
+use crate::env::Env;
 use rocket::get;
 use rocket::http::Status;
 use rocket::response::{Responder, Stream};
 use rocket_contrib::templates::Template;
 use serde_derive::Serialize;
-use web::state::State;
+use crate::web::state::State;
 use crate::controllers::file::FileController;
 
 #[derive(Serialize)]

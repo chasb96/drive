@@ -1,11 +1,11 @@
-use entities::models::{File, Folder, User};
+use crate::entities::models::{File, Folder, User};
 use rocket::get;
 use rocket::http::Status;
 use rocket::response::Responder;
 use rocket_contrib::templates::Template;
 use serde_derive::Serialize;
-use web::guards::auth::Auth;
-use web::state::State;
+use crate::web::guards::auth::Auth;
+use crate::web::state::State;
 use crate::controllers::file::FileController;
 use crate::controllers::folder::FolderController;
 

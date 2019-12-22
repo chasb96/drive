@@ -3,8 +3,8 @@ mod field_visitor;
 mod user_visitor;
 
 use self::user_visitor::UserVisitor;
-use entities::models::User;
-use entities::presentation::FromJson;
+use crate::entities::models::User;
+use crate::entities::presentation::FromJson;
 use serde::de::{Deserialize, Deserializer};
 
 const FIELDS: &[&str] = &["user_id", "email", "name", "role"];

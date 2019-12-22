@@ -1,4 +1,4 @@
-use entities::models::User;
+use crate::entities::models::User;
 
 pub trait UserAuthorizer {
     fn can_index(&self, user: &User) -> bool;

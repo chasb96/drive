@@ -1,4 +1,4 @@
-use entities::models::{Folder, User};
+use crate::entities::models::{Folder, User};
 use crate::entities::traits::folder::FolderStore;
 use crate::entities::error::DataStoreError;
 

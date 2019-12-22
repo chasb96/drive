@@ -1,6 +1,6 @@
 use super::Query;
-use entities::models::User;
-use entities::diesel::pool::DbPool;
+use crate::entities::models::User;
+use crate::entities::diesel::pool::DbPool;
 use diesel;
 use diesel::dsl::Eq;
 use diesel::expression::Expression;
@@ -8,7 +8,7 @@ use diesel::pg::Pg;
 use diesel::prelude::Insertable;
 use diesel::ExpressionMethods;
 use diesel::{QueryDsl, RunQueryDsl};
-use schema::*;
+use crate::schema::*;
 
 type AllColumns = (
     users::id,

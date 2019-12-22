@@ -1,13 +1,13 @@
-use controllers::folder::UpdateRequest;
-use controllers::folder::StoreRequest;
-use entities::presentation::ToJson;
+use crate::controllers::folder::UpdateRequest;
+use crate::controllers::folder::StoreRequest;
+use crate::entities::presentation::ToJson;
 use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::{get, post};
 use rocket_contrib::json::Json;
 use serde_derive::Deserialize;
-use web::guards::auth::Auth;
-use controllers::folder::FolderController;
+use crate::web::guards::auth::Auth;
+use crate::controllers::folder::FolderController;
 
 #[get("/folders?<parent_id>")]
 pub fn index(auth: Auth, parent_id: Option<i32>) -> impl Responder<'static> {

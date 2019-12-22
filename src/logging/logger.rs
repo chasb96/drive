@@ -1,5 +1,5 @@
 use super::{Log, LogLevel};
-use env::Env;
+use crate::env::Env;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::io::{stdout, Stdout};

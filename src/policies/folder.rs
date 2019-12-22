@@ -1,4 +1,4 @@
-use entities::models::{Folder, User};
+use crate::entities::models::{Folder, User};
 
 pub trait FolderAuthorizer {
     fn can_index(&self, user: &User) -> bool;

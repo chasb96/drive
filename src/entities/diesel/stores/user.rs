@@ -1,9 +1,9 @@
 use super::super::query::Query;
-use entities::traits::user::UserStore;
-use entities::models::{Folder, User};
+use crate::entities::traits::user::UserStore;
+use crate::entities::models::{Folder, User};
 use crate::entities::error::DataStoreError;
-use entities::diesel::DbFacade;
-use schema::*;
+use crate::entities::diesel::DbFacade;
+use crate::schema::*;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::RunQueryDsl;

@@ -1,4 +1,4 @@
-use entities::models::{File, User};
+use crate::entities::models::{File, User};
 
 pub trait FileAuthorizer {
     fn can_create(&self, user: &User) -> bool;

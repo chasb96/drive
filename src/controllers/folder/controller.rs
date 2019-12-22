@@ -1,5 +1,5 @@
 use crate::controllers::error::ControllerError as Error;
-use entities::models::{Folder, User};
+use crate::entities::models::{Folder, User};
 use crate::services::folder::CreateRequest as ServiceCreateRequest;
 use crate::services::folder::UpdateRequest as ServiceUpdateRequest;
 use crate::services::error::ServiceError;
@@ -7,7 +7,7 @@ use crate::controllers::folder::FolderController;
 use crate::services::FolderService;
 use crate::controllers::folder::StoreRequest;
 use crate::controllers::folder::UpdateRequest;
-use policies::folder::FolderAuthorizer;
+use crate::policies::folder::FolderAuthorizer;
 
 pub struct Controller<T: FolderService, S: FolderAuthorizer> {
     folder_service: T,

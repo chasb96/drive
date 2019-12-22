@@ -1,5 +1,5 @@
-use entities::builders::Builder;
-use entities::models::File;
+use crate::entities::builders::Builder;
+use crate::entities::models::File;
 
 pub struct FileBuilder {
     id: i32,

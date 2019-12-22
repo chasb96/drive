@@ -1,5 +1,5 @@
-use entities::builders::Builder;
-use entities::models::User;
+use crate::entities::builders::Builder;
+use crate::entities::models::User;
 
 pub struct UserBuilder {
     id: i32,

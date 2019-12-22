@@ -1,5 +1,5 @@
 use crate::entities::error::DataStoreError;
-use entities::models::File;
+use crate::entities::models::File;
 
 pub trait FileStore {
     fn find_by_file_id(&self, file_id: i32) -> Result<File, DataStoreError>;

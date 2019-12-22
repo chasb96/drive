@@ -1,7 +1,7 @@
 pub mod service;
 
-use entities::models::File;
-use services::error::ServiceError;
+use crate::entities::models::File;
+use crate::services::error::ServiceError;
 
 pub struct CreateRequest {
     pub name: String,

@@ -1,6 +1,6 @@
 pub mod service;
 
-use entities::models::Folder;
+use crate::entities::models::Folder;
 use crate::services::error::ServiceError;
 
 pub struct CreateRequest {

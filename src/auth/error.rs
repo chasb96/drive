@@ -1,5 +1,5 @@
-use auth::basic::Error as BasicError;
-use auth::bearer::Error as TokenError;
+use crate::auth::basic::Error as BasicError;
+use crate::auth::bearer::Error as TokenError;
 use std::error;
 use std::fmt;
 

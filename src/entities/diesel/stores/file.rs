@@ -1,9 +1,9 @@
-use entities::traits::file::FileStore;
+use crate::entities::traits::file::FileStore;
 use super::super::query::Query;
-use entities::models::File;
+use crate::entities::models::File;
 use crate::entities::error::DataStoreError;
-use entities::diesel::DbFacade;
-use schema::*;
+use crate::entities::diesel::DbFacade;
+use crate::schema::*;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::RunQueryDsl;

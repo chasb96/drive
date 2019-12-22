@@ -1,6 +1,6 @@
 pub mod controller;
 
-use entities::models::{Folder, User};
+use crate::entities::models::{Folder, User};
 use crate::controllers::error::ControllerError as Error;
 
 pub struct StoreRequest {

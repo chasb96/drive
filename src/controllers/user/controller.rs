@@ -1,13 +1,13 @@
-use policies::user::UserAuthorizer;
-use controllers::user::UpdateRequest;
-use controllers::user::StoreRequest;
-use controllers::user::UserController;
-use services::user::CreateRequest as ServiceCreateRequest;
-use services::user::UpdateRequest as ServiceUpdateRequest;
-use controllers::error::ControllerError as Error;
-use entities::models::User;
-use services::UserService;
-use services::error::ServiceError;
+use crate::policies::user::UserAuthorizer;
+use crate::controllers::user::UpdateRequest;
+use crate::controllers::user::StoreRequest;
+use crate::controllers::user::UserController;
+use crate::services::user::CreateRequest as ServiceCreateRequest;
+use crate::services::user::UpdateRequest as ServiceUpdateRequest;
+use crate::controllers::error::ControllerError as Error;
+use crate::entities::models::User;
+use crate::services::UserService;
+use crate::services::error::ServiceError;
 
 pub struct Controller<T: UserService, S: UserAuthorizer> {
     user_service: T,

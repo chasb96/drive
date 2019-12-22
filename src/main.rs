@@ -58,13 +58,13 @@ fn main() {
     web::boot()
 }
 
-use entities::models::User;
-use entities::diesel::pool::DbPool;
+use crate::entities::models::User;
+use crate::entities::diesel::pool::DbPool;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::RunQueryDsl;
-use schema::*;
-use services::UserService;
+use crate::schema::*;
+use crate::services::UserService;
 use crate::services::user::CreateRequest;
 
 fn seed() {

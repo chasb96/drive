@@ -1,8 +1,8 @@
-use auth::authenticate::Authenticate;
-use auth::basic::Credentials;
-use auth::bearer::Bearer;
-use auth::Auth;
-use entities::models::User;
+use crate::auth::authenticate::Authenticate;
+use crate::auth::basic::Credentials;
+use crate::auth::bearer::Bearer;
+use crate::auth::Auth;
+use crate::entities::models::User;
 use rocket::http::Status;
 use rocket::post;
 use rocket::response::Responder;

@@ -3,8 +3,8 @@ mod field_visitor;
 mod folder_visitor;
 
 use self::folder_visitor::FolderVisitor;
-use entities::models::Folder;
-use entities::presentation::FromJson;
+use crate::entities::models::Folder;
+use crate::entities::presentation::FromJson;
 use serde::de::{Deserialize, Deserializer};
 
 const FIELDS: &[&str] = &["folder_id", "name", "parent_id", "user_id"];
