@@ -21,16 +21,21 @@ use crate::storage_drivers::StorageDriver;
 use tokio::codec::{BytesCodec, FramedRead};
 use tokio::fs::File as TokioFile;
 use tokio::prelude::{Future, Stream};
+use crate::storage_drivers::error::StorageError;
 
 pub struct S3;
 
-impl StorageDriver for S3 {
-    type Error = S3Error;
+impl S3 {
+    pub fn new() -> Self {
+        Self
+    }
+}
 
-    fn store(path: &Path, contents: File) -> Result<(), Self::Error> {
+impl StorageDriver for S3 {
+    fn store(&self, path: &Path, contents: File) -> Result<(), StorageError> {
         let len = match contents.metadata() {
             Ok(metadata) => metadata.len(),
-            Err(e) => return Err(S3Error::from(e)),
+            Err(e) => return Err(StorageError::from(S3Error::from(e))),
         };
 
         let async_file = TokioFile::from_std(contents);
@@ -53,11 +58,11 @@ impl StorageDriver for S3 {
 
         match client.put_object(request).sync() {
             Ok(_) => Ok(()),
-            Err(e) => Err(S3Error::from(e)),
+            Err(e) => Err(StorageError::from(S3Error::from(e))),
         }
     }
 
-    fn read(path: &Path) -> Result<File, Self::Error> {
+    fn read(&self, path: &Path) -> Result<File, StorageError> {
         let region = Region::env().into();
         let bucket = Bucket::env().into();
         let provider: StaticProvider = Credentials::env().into();
@@ -72,7 +77,7 @@ impl StorageDriver for S3 {
 
         let response = match client.get_object(request).sync() {
             Ok(response) => response,
-            Err(e) => return Err(S3Error::from(e)),
+            Err(e) => return Err(StorageError::from(S3Error::from(e))),
         };
 
         // Create a temp file for streaming the file back to the end user
@@ -96,7 +101,7 @@ impl StorageDriver for S3 {
                 Ok(file) => file,
                 Err(e) => {
                     log!("error", "Failed to create tmp file: {}", e);
-                    return Err(S3Error::from(e));
+                    return Err(StorageError::from(S3Error::from(e)));
                 }
             };
 
@@ -112,14 +117,14 @@ impl StorageDriver for S3 {
             Ok(file) => file,
             Err(e) => {
                 log!("error", "Failed to open tmp file: {}", e);
-                return Err(S3Error::from(e));
+                return Err(StorageError::from(S3Error::from(e)));
             }
         };
 
         Ok(file)
     }
 
-    fn delete(path: &Path) -> Result<(), Self::Error> {
+    fn delete(&self, path: &Path) -> Result<(), StorageError> {
         let region = Region::env().into();
         let bucket = Bucket::env().into();
         let provider: StaticProvider = Credentials::env().into();
@@ -134,7 +139,7 @@ impl StorageDriver for S3 {
 
         match client.delete_object(request).sync() {
             Ok(_) => Ok(()),
-            Err(e) => Err(S3Error::from(e)),
+            Err(e) => Err(StorageError::from(S3Error::from(e))),
         }
     }
 }

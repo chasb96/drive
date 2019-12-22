@@ -18,7 +18,9 @@ macro_rules! resolve {
     };
 
     (StorageService) => {
-        crate::services::storage::implementation::Service::new()
+        crate::services::storage::implementation::Service::new(
+            resolve!(StorageDriver)
+        )
     };
 
     (FileController) => {
@@ -65,5 +67,9 @@ macro_rules! resolve {
 
     (UserAuthorizer) => {
         crate::policies::user::Authorizer::new()
-    }
+    };
+
+    (StorageDriver) => {
+        crate::env::Env::storage_driver()
+    };
 }

@@ -6,17 +6,20 @@ use rand::{self, distributions::Alphanumeric, Rng};
 use std::fs::File;
 use std::path::Path;
 use crate::storage_drivers::StorageDriver;
-use crate::storage_drivers::StorageRouter;
 
-pub struct Service;
+pub struct Service<T: StorageDriver> {
+    storage_driver: T
+}
 
-impl Service {
-    pub fn new() -> Self {
-        Self
+impl<T: StorageDriver> Service<T> {
+    pub fn new(storage_driver: T) -> Self {
+        Self {
+            storage_driver
+        }
     }
 }
 
-impl StorageService for Service {
+impl<T: StorageDriver> StorageService for Service<T> {
     fn store(&self, directory: String, input: File) -> Result<String, ServiceError> {
         let timestamp = Utc::now().to_string();
         let random_bytes: String = rand::thread_rng()
@@ -37,7 +40,7 @@ impl StorageService for Service {
             file_name = &file_name
         );
 
-        match StorageRouter::store(Path::new(&path), input) {
+        match self.storage_driver.store(Path::new(&path), input) {
             Ok(_) => Ok(file_name),
             Err(e) => {
                 log!("error", "Failed to store file: {}", e);
@@ -54,7 +57,7 @@ impl StorageService for Service {
             file_name = &file_name
         );
 
-        match StorageRouter::read(Path::new(&path)) {
+        match self.storage_driver.read(Path::new(&path)) {
             Ok(contents) => Ok(contents),
             Err(e) => {
                 log!("error", "Failed to read file: {}", e);
@@ -71,7 +74,7 @@ impl StorageService for Service {
             file_name = &file_name
         );
 
-        match StorageRouter::delete(Path::new(&path)) {
+        match self.storage_driver.delete(Path::new(&path)) {
             Ok(_) => Ok(()),
             Err(e) => {
                 log!("error", "Failed to delete file: {}", e);
