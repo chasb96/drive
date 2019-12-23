@@ -1,5 +1,11 @@
 use crate::entities::models::User;
 
+#[cfg(test)]
+use mockall::*;
+#[cfg(test)]
+use mockall::predicate::*;
+
+#[cfg_attr(test, automock)]
 pub trait UserAuthorizer {
     fn can_index(&self, user: &User) -> bool;
 
