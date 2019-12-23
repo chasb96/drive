@@ -1,11 +1,11 @@
 use bcrypt::hash;
-use entities::builders::{Builder, UserBuilder};
-use entities::models::User;
+use crate::entities::builders::{Builder, UserBuilder};
+use crate::entities::models::User;
 use crate::services::error::ServiceError;
-use env::Env;
+use crate::env::Env;
 use crate::services::UserService;
 use crate::services::FolderService;
-use entities::traits::user::UserStore;
+use crate::entities::traits::user::UserStore;
 use crate::services::user::CreateRequest;
 use crate::services::user::UpdateRequest;
 use crate::services::folder::CreateRequest as FolderCreateRequest;

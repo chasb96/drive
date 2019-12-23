@@ -1,6 +1,6 @@
 use super::field::Field;
-use entities::builders::{Builder, FolderBuilder};
-use entities::models::Folder;
+use crate::entities::builders::{Builder, FolderBuilder};
+use crate::entities::models::Folder;
 use serde::de::{self, MapAccess, Visitor};
 use std::fmt;
 

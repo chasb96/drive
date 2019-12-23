@@ -1,13 +1,13 @@
-use controllers::user::StoreRequest;
-use controllers::user::UpdateRequest;
-use entities::presentation::ToJson;
+use crate::controllers::user::StoreRequest;
+use crate::controllers::user::UpdateRequest;
+use crate::entities::presentation::ToJson;
 use rocket::http::Status;
 use rocket::response::Responder;
 use rocket::{get, post};
 use rocket_contrib::json::Json;
 use serde_derive::Deserialize;
-use web::guards::auth::Auth;
-use controllers::UserController;
+use crate::web::guards::auth::Auth;
+use crate::controllers::UserController;
 
 #[get("/users")]
 pub fn index(auth: Auth) -> impl Responder<'static> {

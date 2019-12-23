@@ -1,7 +1,7 @@
-use controllers::file::StoreRequest;
-use controllers::file::UpdateRequest;
-use entities::models::{File, Folder, User};
-use env::Env;
+use crate::controllers::file::StoreRequest;
+use crate::controllers::file::UpdateRequest;
+use crate::entities::models::{File, Folder, User};
+use crate::env::Env;
 use rocket::data::Data;
 use rocket::http::{ContentType, Status};
 use rocket::request::Form;
@@ -15,11 +15,11 @@ use rocket_multipart_form_data::{
 };
 use serde_derive::Serialize;
 use std::fs;
-use web::guards::auth::Auth;
-use web::state::State;
-use web::success::Success;
+use crate::web::guards::auth::Auth;
+use crate::web::state::State;
+use crate::web::success::Success;
 use crate::controllers::file::FileController;
-use controllers::folder::FolderController;
+use crate::controllers::folder::FolderController;
 
 #[get("/folders/<folder_id>/files")]
 pub fn index(_auth: Auth, folder_id: i32) -> impl Responder<'static> {

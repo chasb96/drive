@@ -1,6 +1,6 @@
 use super::Query;
-use entities::models::Folder;
-use entities::diesel::pool::DbPool;
+use crate::entities::models::Folder;
+use crate::entities::diesel::pool::DbPool;
 use diesel;
 use diesel::dsl::Eq;
 use diesel::expression::Expression;
@@ -8,7 +8,7 @@ use diesel::pg::Pg;
 use diesel::prelude::Insertable;
 use diesel::ExpressionMethods;
 use diesel::{QueryDsl, RunQueryDsl};
-use schema::*;
+use crate::schema::*;
 
 type AllColumns = (
     folders::id,

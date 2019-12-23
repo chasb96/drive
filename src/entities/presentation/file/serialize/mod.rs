@@ -1,5 +1,5 @@
-use entities::models::File;
-use entities::presentation::ToJson;
+use crate::entities::models::File;
+use crate::entities::presentation::ToJson;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 
 impl Serialize for File {

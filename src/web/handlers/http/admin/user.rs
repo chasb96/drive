@@ -1,6 +1,6 @@
-use controllers::user::UpdateRequest;
-use controllers::user::StoreRequest;
-use entities::models::User;
+use crate::controllers::user::UpdateRequest;
+use crate::controllers::user::StoreRequest;
+use crate::entities::models::User;
 use rocket::http::Status;
 use rocket::request::Form;
 use rocket::response::{Redirect, Responder};
@@ -8,10 +8,10 @@ use rocket::FromForm;
 use rocket::{get, post};
 use rocket_contrib::templates::Template;
 use serde_derive::Serialize;
-use web::guards::admin::Admin;
-use web::state::State;
-use web::success::Success;
-use controllers::UserController;
+use crate::web::guards::admin::Admin;
+use crate::web::state::State;
+use crate::web::success::Success;
+use crate::controllers::UserController;
 
 #[derive(Serialize)]
 pub struct IndexContext {

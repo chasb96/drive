@@ -1,5 +1,5 @@
-use entities::models::Folder;
-use entities::presentation::ToJson;
+use crate::entities::models::Folder;
+use crate::entities::presentation::ToJson;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 
 impl Serialize for Folder {

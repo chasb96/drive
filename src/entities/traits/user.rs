@@ -1,6 +1,6 @@
-use entities::models::Folder;
+use crate::entities::models::Folder;
 use crate::entities::error::DataStoreError;
-use entities::models::User;
+use crate::entities::models::User;
 
 #[cfg(test)]
 use mockall::*;

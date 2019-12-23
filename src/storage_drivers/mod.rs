@@ -1,20 +1,19 @@
 mod aws;
 mod disk;
+pub mod error;
 pub mod storage_driver_option;
-pub mod storage_router;
+// pub mod storage_router;
 
-pub use self::storage_router::StorageRouter;
+// pub use self::storage_router::StorageRouter;
 
-use std::error::Error;
+use crate::storage_drivers::error::StorageError;
 use std::fs::File;
 use std::path::Path;
 
 pub trait StorageDriver {
-    type Error: Error;
+    fn store(&self, path: &Path, contents: File) -> Result<(), StorageError>;
 
-    fn store(path: &Path, contents: File) -> Result<(), Self::Error>;
+    fn read(&self, path: &Path) -> Result<File, StorageError>;
 
-    fn read(path: &Path) -> Result<File, Self::Error>;
-
-    fn delete(path: &Path) -> Result<(), Self::Error>;
+    fn delete(&self, path: &Path) -> Result<(), StorageError>;
 }

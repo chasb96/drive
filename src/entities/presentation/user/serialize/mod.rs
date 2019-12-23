@@ -1,5 +1,5 @@
-use entities::models::User;
-use entities::presentation::ToJson;
+use crate::entities::models::User;
+use crate::entities::presentation::ToJson;
 use serde::ser::{Serialize, SerializeStruct, Serializer};
 
 impl Serialize for User {

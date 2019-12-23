@@ -1,18 +1,22 @@
 use super::StorageDriver;
+use crate::storage_drivers::error::StorageError;
 use std::fs::create_dir_all;
 use std::fs::remove_file;
 use std::fs::File;
-use std::io::Error;
 use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 
 pub struct Disk;
 
-impl StorageDriver for Disk {
-    type Error = Error;
+impl Disk {
+    pub fn new() -> Self {
+        Self
+    }
+}
 
-    fn store(path: &Path, mut contents: File) -> Result<(), Self::Error> {
+impl StorageDriver for Disk {
+    fn store(&self, path: &Path, mut contents: File) -> Result<(), StorageError> {
         // Attempt to create the file, without any contents in it
         let mut file = match File::create(Path::new(&path)) {
             Ok(file) => file,
@@ -20,7 +24,8 @@ impl StorageDriver for Disk {
                 // Its possible the directory doesn't exist yet
                 if let Err(e) = create_dir_all(format!("{}", path.parent().unwrap().display())) {
                     log!("error", "Failed to create directory: {}", e);
-                    return Err(e);
+
+                    return Err(StorageError::from(e));
                 }
 
                 // Try again, with the new directory, if this fails, give up
@@ -34,7 +39,7 @@ impl StorageDriver for Disk {
                             e
                         );
 
-                        return Err(e);
+                        return Err(StorageError::from(e));
                     }
                 }
             }
@@ -51,7 +56,8 @@ impl StorageDriver for Disk {
                 Ok(bytes) => bytes,
                 Err(e) => {
                     log!("error", "Failed to read buffer: {}", e);
-                    return Err(e);
+
+                    return Err(StorageError::from(e));
                 }
             };
 
@@ -63,20 +69,22 @@ impl StorageDriver for Disk {
             // Dump the buffer into the new file
             if let Err(e) = file.write(&buffer[..bytes]) {
                 log!("error", "Failed to write buffer: {}", e);
-                return Err(e);
+
+                return Err(StorageError::from(e));
             }
         }
 
         // Flush out the last of the writing
         if let Err(e) = file.flush() {
             log!("error", "Failed to flush buffer: {}", e);
-            return Err(e);
+
+            return Err(StorageError::from(e));
         }
 
         Ok(())
     }
 
-    fn read(path: &Path) -> Result<File, Self::Error> {
+    fn read(&self, path: &Path) -> Result<File, StorageError> {
         match File::open(path) {
             Ok(file) => Ok(file),
             Err(e) => {
@@ -87,12 +95,12 @@ impl StorageDriver for Disk {
                     e
                 );
 
-                Err(e)
+                Err(StorageError::from(e))
             }
         }
     }
 
-    fn delete(path: &Path) -> Result<(), Self::Error> {
+    fn delete(&self, path: &Path) -> Result<(), StorageError> {
         match remove_file(path) {
             Ok(_) => Ok(()),
             Err(e) => {
@@ -103,7 +111,7 @@ impl StorageDriver for Disk {
                     e
                 );
 
-                Err(e)
+                Err(StorageError::from(e))
             }
         }
     }

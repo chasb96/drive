@@ -1,4 +1,4 @@
-use auth::bearer::Token;
+use crate::auth::bearer::Token;
 use rocket::http::{Cookie, Cookies, HeaderMap};
 use std::convert::TryFrom;
 use std::error::Error;

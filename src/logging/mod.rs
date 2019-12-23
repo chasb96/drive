@@ -6,7 +6,7 @@ pub use self::log_level::LogLevel;
 pub use self::logger::Logger;
 pub use self::logger_option::LoggerOption;
 
-use env::Env;
+use crate::env::Env;
 use lazy_static::lazy_static;
 use std::convert::TryFrom;
 use std::sync::Mutex;

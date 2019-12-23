@@ -1,6 +1,6 @@
 use rocket::request::{self, FromRequest, Request};
 use rocket::Outcome;
-use web::state::State;
+use crate::web::state::State;
 
 impl<'a, 'r> FromRequest<'a, 'r> for State<'a> {
     type Error = ();

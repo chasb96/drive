@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
-use entities::models::Model;
-use schema::*;
+use crate::entities::models::Model;
+use crate::schema::*;
 
 #[derive(Clone, Debug, PartialEq, Queryable, Associations, Identifiable)]
 pub struct File {

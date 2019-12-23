@@ -1,11 +1,11 @@
+use crate::storage_drivers::error::StorageError;
 use std::{fmt, error};
 use crate::entities::error::DataStoreError;
-use crate::storage_drivers::storage_router::StorageRouterError;
 
 pub enum ServiceError {
     NotFound,
     DataStoreError(DataStoreError),
-    StorageError(StorageRouterError),
+    StorageError(StorageError),
 }
 
 impl error::Error for ServiceError {}
@@ -40,8 +40,8 @@ impl From<DataStoreError> for ServiceError {
     }
 }
 
-impl From<StorageRouterError> for ServiceError {
-    fn from(error: StorageRouterError) -> Self {
+impl From<StorageError> for ServiceError {
+    fn from(error: StorageError) -> Self {
         ServiceError::StorageError(error)
     }
 }

@@ -4,7 +4,7 @@ mod user;
 pub use self::error::Error;
 
 use super::authenticate::Authenticate;
-use env::Env;
+use crate::env::Env;
 use frank_jwt::{decode, encode, Algorithm, ValidationOptions};
 use serde::ser::Serialize;
 use serde_json::json;

@@ -1,6 +1,6 @@
-use entities::models::File;
-use entities::diesel::pool::DbPool;
-use entities::diesel::query::Query;
+use crate::entities::models::File;
+use crate::entities::diesel::pool::DbPool;
+use crate::entities::diesel::query::Query;
 use diesel;
 use diesel::dsl::Eq;
 use diesel::expression::Expression;
@@ -8,7 +8,7 @@ use diesel::pg::Pg;
 use diesel::prelude::Insertable;
 use diesel::ExpressionMethods;
 use diesel::{QueryDsl, RunQueryDsl};
-use schema::*;
+use crate::schema::*;
 
 type AllColumns = (
     files::id,

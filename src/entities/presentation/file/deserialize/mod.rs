@@ -3,8 +3,8 @@ mod field_visitor;
 mod file_visitor;
 
 use self::file_visitor::FileVisitor;
-use entities::models::File;
-use entities::presentation::FromJson;
+use crate::entities::models::File;
+use crate::entities::presentation::FromJson;
 use serde::de::{Deserialize, Deserializer};
 
 const FIELDS: &[&str] = &["file_id", "name", "folder_id", "public", "extension"];

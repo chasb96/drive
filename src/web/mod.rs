@@ -9,7 +9,7 @@ mod state;
 mod success;
 
 use self::handlers::*;
-use controllers::error::ControllerError;
+use crate::controllers::error::ControllerError;
 use rocket::http::Status;
 use rocket_contrib::templates::Template;
 

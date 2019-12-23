@@ -1,8 +1,8 @@
-use auth::authenticate::Authenticate;
-use auth::basic::Credentials;
-use auth::bearer::Token;
-use auth::Auth;
-use entities::models::User;
+use crate::auth::authenticate::Authenticate;
+use crate::auth::basic::Credentials;
+use crate::auth::bearer::Token;
+use crate::auth::Auth;
+use crate::entities::models::User;
 use rocket::http::{Cookie, Cookies, Status};
 use rocket::request::Form;
 use rocket::response::{Redirect, Responder};
@@ -11,8 +11,8 @@ use rocket::{get, post};
 use rocket_contrib::templates::Template;
 use serde_derive::Serialize;
 use std::convert::TryFrom;
-use web::error::Error;
-use web::state::State;
+use crate::web::error::Error;
+use crate::web::state::State;
 
 #[derive(Serialize)]
 struct LoginContext {}

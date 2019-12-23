@@ -1,5 +1,5 @@
-use entities::builders::Builder;
-use entities::models::Folder;
+use crate::entities::builders::Builder;
+use crate::entities::models::Folder;
 
 pub struct FolderBuilder {
     id: i32,

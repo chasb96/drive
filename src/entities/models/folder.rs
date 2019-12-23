@@ -1,6 +1,6 @@
 use super::Model;
 use chrono::NaiveDateTime;
-use schema::*;
+use crate::schema::*;
 
 #[derive(Clone, Debug, PartialEq, Queryable, Associations, Identifiable)]
 pub struct Folder {

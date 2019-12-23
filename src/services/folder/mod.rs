@@ -1,6 +1,6 @@
-pub mod implementation;
+pub mod service;
 
-use entities::models::Folder;
+use crate::entities::models::Folder;
 use crate::services::error::ServiceError;
 
 #[cfg(test)]

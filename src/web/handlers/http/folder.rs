@@ -1,6 +1,6 @@
-use controllers::folder::UpdateRequest;
-use controllers::folder::StoreRequest;
-use entities::models::{File, Folder, User};
+use crate::controllers::folder::UpdateRequest;
+use crate::controllers::folder::StoreRequest;
+use crate::entities::models::{File, Folder, User};
 use rocket::http::Status;
 use rocket::request::Form;
 use rocket::response::{Redirect, Responder};
@@ -8,9 +8,9 @@ use rocket::FromForm;
 use rocket::{get, post};
 use rocket_contrib::templates::Template;
 use serde_derive::Serialize;
-use web::guards::auth::Auth;
-use web::state::State;
-use web::success::Success;
+use crate::web::guards::auth::Auth;
+use crate::web::state::State;
+use crate::web::success::Success;
 use crate::controllers::file::FileController;
 use crate::controllers::folder::FolderController;
 

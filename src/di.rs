@@ -1,42 +1,47 @@
 macro_rules! resolve {
     (FileService) => {
-        crate::services::file::implementation::Service::new(resolve!(FileStore))
+        crate::services::file::service::Service::new(resolve!(FileStore))
     };
 
     (FolderService) => {
-        crate::services::folder::implementation::Service::new(
+        crate::services::folder::service::Service::new(
             resolve!(FolderStore),
             resolve!(FileService),
         )
     };
 
     (UserService) => {
-        crate::services::user::implementation::Service::new(
+        crate::services::user::service::Service::new(
             resolve!(UserStore),
             resolve!(FolderService),
         )
     };
 
     (StorageService) => {
-        crate::services::storage::implementation::Service::new()
+        crate::services::storage::implementation::Service::new(
+            resolve!(StorageDriver)
+        )
     };
 
     (FileController) => {
-        crate::controllers::file::implementation::Controller::new(
+        crate::controllers::file::controller::Controller::new(
             resolve!(FileService),
             resolve!(StorageService),
+            resolve!(FileAuthorizer),
         )
     };
 
     (FolderController) => {
-        crate::controllers::folder::implementation::Controller::new(
-            resolve!(FolderService)
+        crate::controllers::folder::controller::Controller::new(
+            resolve!(FolderService),
+            resolve!(FolderAuthorizer)
         )
     };
 
     (UserController) => {
-        crate::controllers::user::implementation::Controller::new(
-            resolve!(UserService)
+        crate::controllers::user::controller::Controller::new(
+            resolve!(UserService),
+            resolve!(UserAuthorizer)
         )
     };
 
@@ -50,5 +55,23 @@ macro_rules! resolve {
 
     (FileStore) => {
         crate::entities::diesel::stores::file::Store::new()
+    };
+
+    (FileAuthorizer) => {
+        crate::policies::file::Authorizer::new(
+            resolve!(FolderService)
+        )
+    };
+
+    (FolderAuthorizer) => {
+        crate::policies::folder::Authorizer::new()
+    };
+
+    (UserAuthorizer) => {
+        crate::policies::user::Authorizer::new()
+    };
+
+    (StorageDriver) => {
+        crate::env::Env::storage_driver()
     };
 }
