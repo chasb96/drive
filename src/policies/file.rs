@@ -125,7 +125,7 @@ mod tests {
 
         let authorizer = Authorizer::new(mock_folder_service);
 
-        assert!(authorizer.can_view(&user, &file))
+        assert!(authorizer.can_modify(&user, &file))
     }
 
     #[test]
@@ -143,7 +143,7 @@ mod tests {
 
         let authorizer = Authorizer::new(mock_folder_service);
 
-        assert!(!authorizer.can_view(&user, &file))
+        assert!(!authorizer.can_modify(&user, &file))
     }
 
     #[test]
@@ -161,7 +161,7 @@ mod tests {
 
         let authorizer = Authorizer::new(mock_folder_service);
 
-        assert!(authorizer.can_view(&user, &file))
+        assert!(authorizer.can_delete(&user, &file))
     }
 
     #[test]
@@ -179,6 +179,6 @@ mod tests {
 
         let authorizer = Authorizer::new(mock_folder_service);
 
-        assert!(!authorizer.can_view(&user, &file))
+        assert!(!authorizer.can_delete(&user, &file))
     }
 }

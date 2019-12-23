@@ -41,3 +41,74 @@ impl FolderAuthorizer for Authorizer {
         folder.user_id() == user.id()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Authorizer;
+    use super::FolderAuthorizer;
+    use crate::entities::builders::{
+        Builder,
+        UserBuilder,
+        FolderBuilder
+    };
+
+    #[test]
+    fn test_can_view() {
+        let user = factory!(User);
+        let folder = factory!(Folder, user.id(), None);
+
+        let authorizer = Authorizer::new();
+
+        assert!(authorizer.can_view(&user, &folder))
+    }
+
+    #[test]
+    fn test_cannot_view() {
+        let user = factory!(User);
+        let folder = factory!(Folder, user.id() + 1, None);
+
+        let authorizer = Authorizer::new();
+
+        assert!(!authorizer.can_view(&user, &folder))
+    }
+
+    #[test]
+    fn test_can_modify() {
+        let user = factory!(User);
+        let folder = factory!(Folder, user.id(), None);
+
+        let authorizer = Authorizer::new();
+
+        assert!(authorizer.can_modify(&user, &folder))
+    }
+
+    #[test]
+    fn test_cannot_modify() {
+        let user = factory!(User);
+        let folder = factory!(Folder, user.id() + 1, None);
+
+        let authorizer = Authorizer::new();
+
+        assert!(!authorizer.can_modify(&user, &folder))
+    }
+
+    #[test]
+    fn test_can_delete() {
+        let user = factory!(User);
+        let folder = factory!(Folder, user.id(), None);
+
+        let authorizer = Authorizer::new();
+
+        assert!(authorizer.can_delete(&user, &folder))
+    }
+
+    #[test]
+    fn test_cannot_delete() {
+        let user = factory!(User);
+        let folder = factory!(Folder, user.id() + 1, None);
+
+        let authorizer = Authorizer::new();
+
+        assert!(!authorizer.can_delete(&user, &folder))
+    }
+}
